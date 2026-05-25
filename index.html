@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>《最强蜗牛》日语本地化流程表</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #f5f7fb;
+      color: #222;
+    }
+
+    header {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #fff;
+      padding: 20px 28px;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    header p {
+      margin: 0;
+      opacity: 0.95;
+    }
+
+    .container {
+      display: flex;
+      min-height: calc(100vh - 96px);
+    }
+
+    .sidebar {
+      width: 240px;
+      background: #fff;
+      border-right: 1px solid #e5e7eb;
+      padding: 20px 16px;
+    }
+
+    .sidebar h2 {
+      font-size: 18px;
+      margin: 0 0 16px;
+    }
+
+    .nav-btn {
+      width: 100%;
+      display: block;
+      border: none;
+      background: #eef2ff;
+      color: #3730a3;
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      text-align: left;
+      font-size: 14px;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+
+    .nav-btn:hover {
+      background: #ddd6fe;
+    }
+
+    .nav-btn.active {
+      background: #4f46e5;
+      color: #fff;
+    }
+
+    .main {
+      flex: 1;
+      padding: 24px;
+    }
+
+    .tab {
+      display: none;
+    }
+
+    .tab.active {
+      display: block;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    }
+
+    .card h3 {
+      margin-top: 0;
+      margin-bottom: 14px;
+      font-size: 20px;
+    }
+
+    .desc {
+      line-height: 1.8;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .upload-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .upload-box {
+      border: 1px dashed #c7d2fe;
+      background: #f8faff;
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .upload-box h4 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    .upload-box p {
+      margin: 6px 0;
+      color: #555;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    input[type="file"] {
+      margin-top: 12px;
+    }
+
+    .actions {
+      margin-top: 16px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    button.action,
+    a.action-link {
+      border: none;
+      background: #4f46e5;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.2;
+    }
+
+    button.action.secondary,
+    a.action-link.secondary {
+      background: #10b981;
+    }
+
+    button.action.gray,
+    a.action-link.gray {
+      background: #6b7280;
+    }
+
+    button.action.template,
+    a.action-link.template {
+      background: #f59e0b;
+    }
+
+    button.action:hover,
+    a.action-link:hover {
+      opacity: 0.92;
+    }
+
+    .status {
+      margin-top: 12px;
+      font-size: 14px;
+      color: #374151;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 12px;
+    }
+
+    .summary-item {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      padding: 14px;
+      border-radius: 10px;
+    }
+
+    .summary-item .label {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 6px;
+    }
+
+    .summary-item .value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 12px;
+      background: #fff;
+    }
+
+    th, td {
+      border: 1px solid #e5e7eb;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+      word-break: break-all;
+    }
+
+    th {
+      background: #f3f4f6;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      max-height: 420px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    .note {
+      color: #92400e;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .placeholder {
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .template-tip {
+      margin-top: 10px;
+      padding: 10px 12px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 900px) {
+      .container {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .upload-grid,
+      .summary {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>《最强蜗牛》日语本地化流程表</h1>
+    <p>用于日语版本本地化流程说明、参数检查与后续处理。</p>
+  </header>
+
+  <div class="container">
+    <aside class="sidebar">
+      <h2>流程导航</h2>
+      <button class="nav-btn active" onclick="showTab('intro', this)">流程说明</button>
+      <button class="nav-btn" onclick="showTab('paramCheck', this)">① 参数检查</button>
+      <button class="nav-btn" onclick="showTab('todo2', this)">② 待补充</button>
+    </aside>
+
+    <main class="main">
+      <!-- 流程说明 -->
+      <section id="intro" class="tab active">
+        <div class="card">
+          <h3>流程说明</h3>
+          <div class="desc">
+            <p><strong>本页面用于《最强蜗牛》日语本地化流程管理。</strong></p>
+            <p>当前已配置流程如下：</p>
+            <p>① <strong>参数检查</strong>：导入“参数全量表”和“筛选表”，根据 key 与中文原文进行比对，筛出最终需要修改的文本，并单独提示“key相同但中文不同”的异常情况。</p>
+            <p>② <strong>待补充</strong>：后续可继续新增如术语检查、QA检查、导出结果、提交记录等模块。</p>
+          </div>
+
+          <div class="actions">
+            <button class="action" onclick="jumpToParamCheck()">跳转到①参数检查</button>
+
+            <!-- 下载筛选表模板：Excel 文件需要和 index.html 同级，文件名为 filter_template.xlsx -->
+            <a class="action-link template" href="./filter_template.xlsx" download="筛选表模板.xlsx">
+              下载筛选表模板
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- 参数检查 -->
+      <section id="paramCheck" class="tab">
+        <div class="card">
+          <h3>① 参数检查</h3>
+          <div class="desc">
+            <p><strong>导入说明：</strong></p>
+            <p>1. <strong>参数全量表</strong>：与直接导出的<strong> Erros 表</strong>一致：</p>
+            <p>
+              A1: id，B1: key，C1: 语言版本，D1: 中文原文，E1: 错误译文，F1: 错误类型，G1: 阻断类型
+            </p>
+            <p>2. <strong>筛选表</strong>：日语由于特殊处理，比如删去{race}，会在参数检查反复出现，为了节约时间填入此表可省略检查。结构如下：</p>
+            <p>A1: key，B1: 中文，C1: 译文</p>
+            <p><strong>比对规则：</strong></p>
+            <p>
+              当参数全量表中的 <strong>key = 筛选表中的 key</strong> 且
+              <strong>中文原文 = 中文</strong> 时，该条可删去；
+              如果 <strong>key 相同但中文原文 ≠ 中文</strong>，则不可删去，并输出为单独提醒；
+              剩余内容即为最终需要修改的文本。（防止中文变动）
+            </p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>文件导入</h3>
+
+          <div class="upload-grid">
+            <div class="upload-box">
+              <h4>参数全量表</h4>
+              <p>支持格式：.xlsx / .csv</p>
+              <p>字段：id / key / 语言版本 / 中文原文 / 错误译文 / 错误类型 / 阻断类型</p>
+              <input type="file" id="fullFile" accept=".xlsx,.xls,.csv" />
+              <div class="status" id="fullStatus">尚未导入文件</div>
+            </div>
+
+            <div class="upload-box">
+              <h4>筛选表</h4>
+              <p>支持格式：.xlsx / .csv</p>
+              <p>字段：key / 中文 / 译文</p>
+              <input type="file" id="filterFile" accept=".xlsx,.xls,.csv" />
+              <div class="status" id="filterStatus">尚未导入文件</div>
+
+              <div class="template-tip">
+                如无筛选表，可先点击下方“下载筛选表模板”，填写后再导入。
+              </div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <!-- 下载筛选表模板：Excel 文件需要上传到 GitHub 仓库根目录，文件名为 filter_template.xlsx -->
+            <a class="action-link template" href="./filter_template.xlsx" download="筛选表模板.xlsx">
+              下载筛选表模板
+            </a>
+
+            <button class="action" onclick="runCheck()">开始参数检查</button>
+            <button class="action secondary" onclick="exportResults()">导出结果Excel</button>
+            <button class="action gray" onclick="resetAll()">清空数据</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>结果汇总</h3>
+          <div class="summary">
+            <div class="summary-item">
+              <div class="label">参数全量表总数</div>
+              <div class="value" id="countFull">0</div>
+            </div>
+            <div class="summary-item">
+              <div class="label">筛选表总数</div>
+              <div class="value" id="countFilter">0</div>
+            </div>
+            <div class="summary-item">
+              <div class="label">最终需修改文本</div>
+              <div class="value" id="countFinal">0</div>
+            </div>
+            <div class="summary-item">
+              <div class="label">单独提醒数量</div>
+              <div class="value" id="countAlert">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>单独提醒：key相同但中文不同</h3>
+          <div class="note">
+            以下内容表示：在筛选过程中发现 <strong>key 一致</strong>，但 <strong>中文原文不一致</strong>，因此不能删除，需要人工确认。
+          </div>
+          <div class="table-wrap" id="alertTableWrap">
+            <div class="placeholder" style="padding:16px;">暂无数据</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>最终需要修改的文本</h3>
+          <div class="table-wrap" id="finalTableWrap">
+            <div class="placeholder" style="padding:16px;">暂无数据</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 待补充 -->
+      <section id="todo2" class="tab">
+        <div class="card">
+          <h3>② 待补充</h3>
+          <div class="desc">
+            该模块暂未配置。你后续可以继续补充，例如：
+            <ul>
+              <li>术语统一检查</li>
+              <li>日语长度检查</li>
+              <li>禁则/标点检查</li>
+              <li>QA结果归档</li>
+              <li>最终导出与提单信息</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    let fullData = [];
+    let filterData = [];
+    let finalData = [];
+    let alertData = [];
+
+    document.getElementById('fullFile').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      readFile(file, (data) => {
+        fullData = normalizeFullData(data);
+        document.getElementById('fullStatus').textContent =
+          `已导入：${file.name}（${fullData.length} 条）`;
+        document.getElementById('countFull').textContent = fullData.length;
+      });
+    });
+
+    document.getElementById('filterFile').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      readFile(file, (data) => {
+        filterData = normalizeFilterData(data);
+        document.getElementById('filterStatus').textContent =
+          `已导入：${file.name}（${filterData.length} 条）`;
+        document.getElementById('countFilter').textContent = filterData.length;
+      });
+    });
+
+    function showTab(id, btn) {
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+    }
+
+    function jumpToParamCheck() {
+      const btns = document.querySelectorAll('.nav-btn');
+      showTab('paramCheck', btns[1]);
+    }
+
+    function readFile(file, callback) {
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        const data = e.target.result;
+        let workbook;
+
+        if (file.name.toLowerCase().endsWith('.csv')) {
+          workbook = XLSX.read(data, { type: 'string' });
+        } else {
+          workbook = XLSX.read(data, { type: 'binary' });
+        }
+
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+        callback(json);
+      };
+
+      if (file.name.toLowerCase().endsWith('.csv')) {
+        reader.readAsText(file, 'utf-8');
+      } else {
+        reader.readAsBinaryString(file);
+      }
+    }
+
+    function normalizeKeyName(obj, possibleKeys) {
+      for (const k of possibleKeys) {
+        if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
+      }
+      return '';
+    }
+
+    function normalizeFullData(data) {
+      return data.map(row => ({
+        id: normalizeKeyName(row, ['id', 'ID', 'Id']),
+        key: String(normalizeKeyName(row, ['key', 'Key', 'KEY'])).trim(),
+        lang: normalizeKeyName(row, ['语言版本', 'lang', '语言', 'Language']),
+        zh: String(normalizeKeyName(row, ['中文原文', '中文', '原文'])).trim(),
+        wrongTrans: normalizeKeyName(row, ['错误译文', '译文', '日文', '错误翻译']),
+        errorType: normalizeKeyName(row, ['错误类型', '类型']),
+        blockType: normalizeKeyName(row, ['阻断类型', '阻断'])
+      })).filter(row => row.key || row.zh || row.wrongTrans);
+    }
+
+    function normalizeFilterData(data) {
+      return data.map(row => ({
+        key: String(normalizeKeyName(row, ['key', 'Key', 'KEY'])).trim(),
+        zh: String(normalizeKeyName(row, ['中文', '中文原文', '原文'])).trim(),
+        trans: normalizeKeyName(row, ['译文', '翻译', '日文'])
+      })).filter(row => row.key || row.zh || row.trans);
+    }
+
+    function runCheck() {
+      if (!fullData.length) {
+        alert('请先导入参数全量表。');
+        return;
+      }
+
+      if (!filterData.length) {
+        alert('请先导入筛选表。');
+        return;
+      }
+
+      finalData = [];
+      alertData = [];
+
+      const filterMap = new Map();
+
+      for (const row of filterData) {
+        if (!filterMap.has(row.key)) {
+          filterMap.set(row.key, []);
+        }
+        filterMap.get(row.key).push(row);
+      }
+
+      for (const row of fullData) {
+        const matchedList = filterMap.get(row.key);
+
+        if (!matchedList || matchedList.length === 0) {
+          finalData.push(row);
+          continue;
+        }
+
+        let shouldDelete = false;
+        let hasZhMismatch = false;
+
+        for (const f of matchedList) {
+          if (row.key === f.key) {
+            if (row.zh === f.zh) {
+              shouldDelete = true;
+              break;
+            } else {
+              hasZhMismatch = true;
+            }
+          }
+        }
+
+        if (shouldDelete) {
+          continue;
+        }
+
+        if (hasZhMismatch) {
+          alertData.push({
+            id: row.id,
+            key: row.key,
+            lang: row.lang,
+            fullZh: row.zh,
+            wrongTrans: row.wrongTrans,
+            errorType: row.errorType,
+            blockType: row.blockType
+          });
+        }
+
+        finalData.push(row);
+      }
+
+      document.getElementById('countFinal').textContent = finalData.length;
+      document.getElementById('countAlert').textContent = alertData.length;
+
+      renderTable('alertTableWrap', alertData, [
+        { key: 'id', label: 'id' },
+        { key: 'key', label: 'key' },
+        { key: 'lang', label: '语言版本' },
+        { key: 'fullZh', label: '参数全量表-中文原文' },
+        { key: 'wrongTrans', label: '错误译文' },
+        { key: 'errorType', label: '错误类型' },
+        { key: 'blockType', label: '阻断类型' }
+      ]);
+
+      renderTable('finalTableWrap', finalData, [
+        { key: 'id', label: 'id' },
+        { key: 'key', label: 'key' },
+        { key: 'lang', label: '语言版本' },
+        { key: 'zh', label: '中文原文' },
+        { key: 'wrongTrans', label: '错误译文' },
+        { key: 'errorType', label: '错误类型' },
+        { key: 'blockType', label: '阻断类型' }
+      ]);
+
+      alert('参数检查完成。');
+    }
+
+    function renderTable(containerId, data, columns) {
+      const container = document.getElementById(containerId);
+
+      if (!data.length) {
+        container.innerHTML = '<div class="placeholder" style="padding:16px;">暂无数据</div>';
+        return;
+      }
+
+      let html = '<table><thead><tr>';
+
+      columns.forEach(col => {
+        html += `<th>${col.label}</th>`;
+      });
+
+      html += '</tr></thead><tbody>';
+
+      data.forEach(row => {
+        html += '<tr>';
+        columns.forEach(col => {
+          html += `<td>${escapeHtml(row[col.key] ?? '')}</td>`;
+        });
+        html += '</tr>';
+      });
+
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function exportResults() {
+      if (!finalData.length && !alertData.length) {
+        alert('暂无可导出的结果，请先执行参数检查。');
+        return;
+      }
+
+      const wb = XLSX.utils.book_new();
+
+      const finalSheetData = finalData.map(row => ({
+        id: row.id,
+        key: row.key,
+        语言版本: row.lang,
+        中文原文: row.zh,
+        错误译文: row.wrongTrans,
+        错误类型: row.errorType,
+        阻断类型: row.blockType
+      }));
+
+      const alertSheetData = alertData.map(row => ({
+        id: row.id,
+        key: row.key,
+        语言版本: row.lang,
+        参数全量表中文原文: row.fullZh,
+        错误译文: row.wrongTrans,
+        错误类型: row.errorType,
+        阻断类型: row.blockType
+      }));
+
+      const ws1 = XLSX.utils.json_to_sheet(finalSheetData);
+      const ws2 = XLSX.utils.json_to_sheet(alertSheetData);
+
+      XLSX.utils.book_append_sheet(wb, ws1, '最终需修改文本');
+      XLSX.utils.book_append_sheet(wb, ws2, '单独提醒');
+
+      XLSX.writeFile(wb, '最强蜗牛_日语本地化_参数检查结果.xlsx');
+    }
+
+    function resetAll() {
+      fullData = [];
+      filterData = [];
+      finalData = [];
+      alertData = [];
+
+      document.getElementById('fullFile').value = '';
+      document.getElementById('filterFile').value = '';
+
+      document.getElementById('fullStatus').textContent = '尚未导入文件';
+      document.getElementById('filterStatus').textContent = '尚未导入文件';
+
+      document.getElementById('countFull').textContent = '0';
+      document.getElementById('countFilter').textContent = '0';
+      document.getElementById('countFinal').textContent = '0';
+      document.getElementById('countAlert').textContent = '0';
+
+      document.getElementById('alertTableWrap').innerHTML =
+        '<div class="placeholder" style="padding:16px;">暂无数据</div>';
+
+      document.getElementById('finalTableWrap').innerHTML =
+        '<div class="placeholder" style="padding:16px;">暂无数据</div>';
+    }
+  </script>
+</body>
+</html>
