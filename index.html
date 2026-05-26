@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>《最强蜗牛》日语本地化流程表</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
   <style>
     * {
       box-sizing: border-box;
@@ -180,6 +181,11 @@
       background: #f59e0b;
     }
 
+    button.action.blue,
+    a.action-link.blue {
+      background: #2563eb;
+    }
+
     button.action:hover,
     a.action-link:hover {
       opacity: 0.92;
@@ -234,11 +240,12 @@
 
     th {
       background: #f3f4f6;
+      white-space: nowrap;
     }
 
     .table-wrap {
       overflow: auto;
-      max-height: 420px;
+      max-height: 460px;
       border: 1px solid #e5e7eb;
       border-radius: 10px;
       background: #fff;
@@ -252,6 +259,7 @@
       border-radius: 10px;
       font-size: 14px;
       line-height: 1.8;
+      margin-bottom: 10px;
     }
 
     .placeholder {
@@ -269,6 +277,128 @@
       border-radius: 8px;
       font-size: 13px;
       line-height: 1.7;
+    }
+
+    .batch-box {
+      margin-top: 14px;
+      padding: 12px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .batch-box label {
+      font-weight: 700;
+      margin-right: 8px;
+    }
+
+    .batch-box input {
+      width: 300px;
+      max-width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+    }
+
+.edit-jp {
+  width: 360px;
+  min-height: 110px;
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  resize: both;
+  font-size: 13px;
+  line-height: 1.6;
+  background: #fff;
+}
+
+    .small-btn {
+      border: none;
+      padding: 6px 10px;
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      margin: 2px;
+      white-space: nowrap;
+    }
+
+    .small-btn.ignore {
+      background: #6b7280;
+    }
+
+    .small-btn.checked {
+      background: #2563eb;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .tag.pending {
+      color: #92400e;
+      background: #fef3c7;
+    }
+
+    .tag.checked {
+      color: #1d4ed8;
+      background: #dbeafe;
+    }
+
+    .tag.ignored {
+      color: #374151;
+      background: #e5e7eb;
+    }
+
+    .tag.normal {
+      color: #047857;
+      background: #d1fae5;
+    }
+
+    .level-tag {
+      display: inline-flex;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .level-tag.block {
+      color: #991b1b;
+      background: #fee2e2;
+    }
+
+    .level-tag.fatal {
+      color: #9a3412;
+      background: #ffedd5;
+    }
+
+    .level-tag.notice {
+      color: #92400e;
+      background: #fef3c7;
+    }
+
+    .level-tag.warn {
+      color: #1d4ed8;
+      background: #dbeafe;
+    }
+
+    .level-tag.empty {
+      color: #6b7280;
+      background: #f3f4f6;
+    }
+
+    .multi-line {
+      white-space: pre-line;
     }
 
     @media (max-width: 900px) {
@@ -305,7 +435,6 @@
     </aside>
 
     <main class="main">
-      <!-- 流程说明 -->
       <section id="intro" class="tab active">
         <div class="card">
           <h3>流程说明</h3>
@@ -318,8 +447,6 @@
 
           <div class="actions">
             <button class="action" onclick="jumpToParamCheck()">跳转到①参数检查</button>
-
-            <!-- 下载筛选表模板：Excel 文件需要和 index.html 同级，文件名为 filter_template.xlsx -->
             <a class="action-link template" href="./filter_template.xlsx" download="筛选表模板.xlsx">
               下载筛选表模板
             </a>
@@ -327,7 +454,6 @@
         </div>
       </section>
 
-      <!-- 参数检查 -->
       <section id="paramCheck" class="tab">
         <div class="card">
           <h3>① 参数检查</h3>
@@ -335,16 +461,32 @@
             <p><strong>导入说明：</strong></p>
             <p>1. <strong>参数全量表</strong>：与直接导出的<strong> Erros 表</strong>一致：</p>
             <p>
-              A1: id，B1: key，C1: 语言版本，D1: 中文原文，E1: 错误译文，F1: 错误类型，G1: 阻断类型
+              A列：id，
+              B列：key，
+              C列：语言版本，
+              D列：中文原文，
+              E列：错误译文，
+              F列：错误类型，
+              G列：错误级别
             </p>
+            <p><strong>错误类型：</strong>具体问题类型，仅展示和导出。</p>
+            <p><strong>错误级别：</strong>用于排序，优先级为：<strong>阻断 &gt; 致命 &gt; 提醒 &gt; 警告 &gt; 空</strong>。</p>
+
             <p>2. <strong>筛选表</strong>：日语由于特殊处理，比如删去{race}，会在参数检查反复出现，为了节约时间填入此表可省略检查。结构如下：</p>
-            <p>A1: key，B1: 中文，C1: 译文</p>
+            <p>A列：key，B列：中文，C列：译文</p>
+
             <p><strong>比对规则：</strong></p>
             <p>
               当参数全量表中的 <strong>key = 筛选表中的 key</strong> 且
               <strong>中文原文 = 中文</strong> 时，该条可删去；
               如果 <strong>key 相同但中文原文 ≠ 中文</strong>，则不可删去，并输出为单独提醒；
               剩余内容即为最终需要修改的文本。（防止中文变动）
+            </p>
+
+            <p><strong>去重规则：</strong></p>
+            <p>
+              修改栏和提醒栏均按 <strong>key + 中文原文</strong> 去重展示；
+              多个语言版本会合并到“语言版本”单元格中换行显示。
             </p>
           </div>
         </div>
@@ -356,7 +498,7 @@
             <div class="upload-box">
               <h4>参数全量表</h4>
               <p>支持格式：.xlsx / .csv</p>
-              <p>字段：id / key / 语言版本 / 中文原文 / 错误译文 / 错误类型 / 阻断类型</p>
+              <p>字段：A=id / B=key / C=语言版本 / D=中文原文 / E=错误译文 / F=错误类型 / G=错误级别</p>
               <input type="file" id="fullFile" accept=".xlsx,.xls,.csv" />
               <div class="status" id="fullStatus">尚未导入文件</div>
             </div>
@@ -364,24 +506,29 @@
             <div class="upload-box">
               <h4>筛选表</h4>
               <p>支持格式：.xlsx / .csv</p>
-              <p>字段：key / 中文 / 译文</p>
+              <p>字段：A=key / B=中文 / C=译文</p>
               <input type="file" id="filterFile" accept=".xlsx,.xls,.csv" />
               <div class="status" id="filterStatus">尚未导入文件</div>
-
               <div class="template-tip">
                 如无筛选表，可先点击下方“下载筛选表模板”，填写后再导入。
               </div>
             </div>
           </div>
 
+          <div class="batch-box">
+            <label for="uploadBatch">翻译上传批次：</label>
+            <input id="uploadBatch" type="text" />
+            <span style="color:#047857;">默认格式：当天 MMDD + 参数检查上传，例如 0526参数检查上传。</span>
+          </div>
+
           <div class="actions">
-            <!-- 下载筛选表模板：Excel 文件需要上传到 GitHub 仓库根目录，文件名为 filter_template.xlsx -->
             <a class="action-link template" href="./filter_template.xlsx" download="筛选表模板.xlsx">
               下载筛选表模板
             </a>
 
             <button class="action" onclick="runCheck()">开始参数检查</button>
-            <button class="action secondary" onclick="exportResults()">导出结果Excel</button>
+            <button class="action secondary" onclick="exportResults()">导出需要修改Excel</button>
+            <button class="action blue" onclick="exportUploadExcel()">导出本地化工具上传表</button>
             <button class="action gray" onclick="resetAll()">清空数据</button>
           </div>
         </div>
@@ -411,7 +558,10 @@
         <div class="card">
           <h3>单独提醒：key相同但中文不同</h3>
           <div class="note">
-            以下内容表示：在筛选过程中发现 <strong>key 一致</strong>，但 <strong>中文原文不一致</strong>，因此不能删除，需要人工确认。
+            以下内容表示：在筛选过程中发现 <strong>key 一致</strong>，但 <strong>中文原文不一致</strong>，因此不能直接删除，需要人工确认。
+            <br />
+            若点击 <strong>忽略</strong>：保持原翻译不动，不进入上传表；
+            若点击 <strong>已检查</strong>：表示已确认该项，可根据编辑后的译文进入上传表。
           </div>
           <div class="table-wrap" id="alertTableWrap">
             <div class="placeholder" style="padding:16px;">暂无数据</div>
@@ -420,13 +570,16 @@
 
         <div class="card">
           <h3>最终需要修改的文本</h3>
+          <div class="note">
+            “修改后译文 jp”可直接编辑；勾选“进入上传表”后会进入本地化工具上传表。
+            点击“忽略”会自动取消勾选，该行不会进入上传表。
+          </div>
           <div class="table-wrap" id="finalTableWrap">
             <div class="placeholder" style="padding:16px;">暂无数据</div>
           </div>
         </div>
       </section>
 
-      <!-- 待补充 -->
       <section id="todo2" class="tab">
         <div class="card">
           <h3>② 待补充</h3>
@@ -450,6 +603,11 @@
     let filterData = [];
     let finalData = [];
     let alertData = [];
+    let uidCounter = 1;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('uploadBatch').value = getTodayMMdd() + '参数检查上传';
+    });
 
     document.getElementById('fullFile').addEventListener('change', function(e) {
       const file = e.target.files[0];
@@ -503,8 +661,14 @@
 
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
-        const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-        callback(json);
+
+        const rows = XLSX.utils.sheet_to_json(sheet, {
+          header: 1,
+          defval: '',
+          blankrows: false
+        });
+
+        callback(rows);
       };
 
       if (file.name.toLowerCase().endsWith('.csv')) {
@@ -514,31 +678,108 @@
       }
     }
 
-    function normalizeKeyName(obj, possibleKeys) {
-      for (const k of possibleKeys) {
-        if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
-      }
-      return '';
-    }
-
     function normalizeFullData(data) {
-      return data.map(row => ({
-        id: normalizeKeyName(row, ['id', 'ID', 'Id']),
-        key: String(normalizeKeyName(row, ['key', 'Key', 'KEY'])).trim(),
-        lang: normalizeKeyName(row, ['语言版本', 'lang', '语言', 'Language']),
-        zh: String(normalizeKeyName(row, ['中文原文', '中文', '原文'])).trim(),
-        wrongTrans: normalizeKeyName(row, ['错误译文', '译文', '日文', '错误翻译']),
-        errorType: normalizeKeyName(row, ['错误类型', '类型']),
-        blockType: normalizeKeyName(row, ['阻断类型', '阻断'])
-      })).filter(row => row.key || row.zh || row.wrongTrans);
+      const rows = data.slice(1).map(row => {
+        return {
+          id: row[0],
+          key: String(row[1] ?? '').trim(),
+          lang: String(row[2] ?? '').trim(),
+          zh: String(row[3] ?? '').trim(),
+          wrongTrans: row[4],
+          errorType: String(row[5] ?? '').trim(),
+          errorLevel: normalizeErrorLevel(row[6])
+        };
+      }).filter(row => row.key || row.zh || row.wrongTrans);
+
+      applyErrorLevelByKey(rows);
+
+      return sortByErrorLevel(rows);
     }
 
     function normalizeFilterData(data) {
-      return data.map(row => ({
-        key: String(normalizeKeyName(row, ['key', 'Key', 'KEY'])).trim(),
-        zh: String(normalizeKeyName(row, ['中文', '中文原文', '原文'])).trim(),
-        trans: normalizeKeyName(row, ['译文', '翻译', '日文'])
+      return data.slice(1).map(row => ({
+        key: String(row[0] ?? '').trim(),
+        zh: String(row[1] ?? '').trim(),
+        trans: row[2]
       })).filter(row => row.key || row.zh || row.trans);
+    }
+
+    function normalizeErrorLevel(value) {
+      const text = String(value ?? '').trim();
+
+      if (!text) return '';
+
+      if (text.includes('阻断')) return '阻断';
+      if (text.includes('致命')) return '致命';
+      if (text.includes('提醒')) return '提醒';
+      if (text.includes('警告')) return '警告';
+
+      const lower = text.toLowerCase();
+
+      if (lower.includes('block')) return '阻断';
+      if (lower.includes('fatal')) return '致命';
+      if (lower.includes('notice')) return '提醒';
+      if (lower.includes('warn')) return '警告';
+
+      return text;
+    }
+
+    function getErrorLevelPriority(errorLevel) {
+      const type = normalizeErrorLevel(errorLevel);
+
+      const priorityMap = {
+        '阻断': 4,
+        '致命': 3,
+        '提醒': 2,
+        '警告': 1
+      };
+
+      return priorityMap[type] || 0;
+    }
+
+    function getHigherErrorLevel(a, b) {
+      return getErrorLevelPriority(a) >= getErrorLevelPriority(b)
+        ? normalizeErrorLevel(a)
+        : normalizeErrorLevel(b);
+    }
+
+    function applyErrorLevelByKey(rows) {
+      const keyLevelMap = new Map();
+
+      rows.forEach(row => {
+        if (!row.key) return;
+
+        const current = keyLevelMap.get(row.key) || '';
+        const higher = getHigherErrorLevel(current, row.errorLevel);
+
+        keyLevelMap.set(row.key, higher);
+      });
+
+      rows.forEach(row => {
+        if (!row.key) return;
+
+        const levelByKey = keyLevelMap.get(row.key);
+
+        if (!row.errorLevel || getErrorLevelPriority(row.errorLevel) < getErrorLevelPriority(levelByKey)) {
+          row.errorLevel = levelByKey || row.errorLevel || '';
+        }
+      });
+    }
+
+    function sortByErrorLevel(data) {
+      return data.sort((a, b) => {
+        const priorityDiff = getErrorLevelPriority(b.errorLevel) - getErrorLevelPriority(a.errorLevel);
+        if (priorityDiff !== 0) return priorityDiff;
+
+        const keyA = String(a.key ?? '');
+        const keyB = String(b.key ?? '');
+        const keyCompare = keyA.localeCompare(keyB, 'zh-CN');
+        if (keyCompare !== 0) return keyCompare;
+
+        const idA = String(a.id ?? '');
+        const idB = String(b.id ?? '');
+        return idA.localeCompare(idB, 'zh-CN');
+      });
     }
 
     function runCheck() {
@@ -552,8 +793,12 @@
         return;
       }
 
+      uidCounter = 1;
       finalData = [];
       alertData = [];
+
+      const rawFinalData = [];
+      const rawAlertData = [];
 
       const filterMap = new Map();
 
@@ -568,12 +813,13 @@
         const matchedList = filterMap.get(row.key);
 
         if (!matchedList || matchedList.length === 0) {
-          finalData.push(row);
+          rawFinalData.push(createRawFinalRow(row, false));
           continue;
         }
 
         let shouldDelete = false;
         let hasZhMismatch = false;
+        let mismatchFilterZhList = [];
 
         for (const f of matchedList) {
           if (row.key === f.key) {
@@ -582,6 +828,7 @@
               break;
             } else {
               hasZhMismatch = true;
+              mismatchFilterZhList.push(f.zh);
             }
           }
         }
@@ -590,82 +837,436 @@
           continue;
         }
 
+        rawFinalData.push(createRawFinalRow(row, hasZhMismatch));
+
         if (hasZhMismatch) {
-          alertData.push({
+          rawAlertData.push({
+            groupKey: getGroupKey(row),
             id: row.id,
             key: row.key,
             lang: row.lang,
             fullZh: row.zh,
+            filterZh: mismatchFilterZhList.join('\n'),
             wrongTrans: row.wrongTrans,
+            editJp: row.wrongTrans,
             errorType: row.errorType,
-            blockType: row.blockType
+            errorLevel: row.errorLevel,
+            status: 'pending'
           });
         }
-
-        finalData.push(row);
       }
+
+      finalData = dedupeFinalRows(rawFinalData);
+      alertData = dedupeAlertRows(rawAlertData, finalData);
+
+      finalData = sortByErrorLevel(finalData);
+      alertData = sortByErrorLevel(alertData);
 
       document.getElementById('countFinal').textContent = finalData.length;
       document.getElementById('countAlert').textContent = alertData.length;
 
-      renderTable('alertTableWrap', alertData, [
-        { key: 'id', label: 'id' },
-        { key: 'key', label: 'key' },
-        { key: 'lang', label: '语言版本' },
-        { key: 'fullZh', label: '参数全量表-中文原文' },
-        { key: 'wrongTrans', label: '错误译文' },
-        { key: 'errorType', label: '错误类型' },
-        { key: 'blockType', label: '阻断类型' }
-      ]);
-
-      renderTable('finalTableWrap', finalData, [
-        { key: 'id', label: 'id' },
-        { key: 'key', label: 'key' },
-        { key: 'lang', label: '语言版本' },
-        { key: 'zh', label: '中文原文' },
-        { key: 'wrongTrans', label: '错误译文' },
-        { key: 'errorType', label: '错误类型' },
-        { key: 'blockType', label: '阻断类型' }
-      ]);
+      renderAlertTable();
+      renderFinalTable();
 
       alert('参数检查完成。');
     }
 
-    function renderTable(containerId, data, columns) {
-      const container = document.getElementById(containerId);
+    function createRawFinalRow(row, isAlert) {
+      return {
+        id: row.id,
+        key: row.key,
+        lang: row.lang,
+        zh: row.zh,
+        wrongTrans: row.wrongTrans,
+        editJp: row.wrongTrans,
+        errorType: row.errorType,
+        errorLevel: row.errorLevel,
+        includeUpload: true,
+        ignored: false,
+        isAlert: isAlert,
+        alertStatus: isAlert ? 'pending' : '',
+        groupKey: getGroupKey(row)
+      };
+    }
 
-      if (!data.length) {
+    function getGroupKey(row) {
+      return `${row.key}||${row.zh}`;
+    }
+
+    function dedupeFinalRows(rows) {
+      const map = new Map();
+
+      rows.forEach(row => {
+        const groupKey = row.groupKey;
+
+        if (!map.has(groupKey)) {
+          map.set(groupKey, {
+            uid: 'row_' + uidCounter++,
+            idList: [],
+            langList: [],
+            errorTypeList: [],
+            id: '',
+            key: row.key,
+            lang: '',
+            zh: row.zh,
+            wrongTrans: row.wrongTrans,
+            editJp: row.editJp,
+            errorType: row.errorType,
+            errorLevel: row.errorLevel,
+            includeUpload: true,
+            ignored: false,
+            isAlert: row.isAlert,
+            alertStatus: row.isAlert ? 'pending' : '',
+            groupKey: groupKey
+          });
+        }
+
+        const target = map.get(groupKey);
+
+        pushUnique(target.idList, row.id);
+        pushUnique(target.langList, row.lang);
+        pushUnique(target.errorTypeList, row.errorType);
+
+        if (!target.wrongTrans && row.wrongTrans) {
+          target.wrongTrans = row.wrongTrans;
+        }
+
+        if (!target.editJp && row.editJp) {
+          target.editJp = row.editJp;
+        }
+
+        target.errorLevel = getHigherErrorLevel(target.errorLevel, row.errorLevel);
+
+        if (row.isAlert) {
+          target.isAlert = true;
+          if (target.alertStatus !== 'ignored' && target.alertStatus !== 'checked') {
+            target.alertStatus = 'pending';
+          }
+        }
+      });
+
+      return Array.from(map.values()).map(row => {
+        row.id = row.idList.join('\n');
+        row.lang = row.langList.join('\n');
+        row.errorType = row.errorTypeList.join('\n');
+
+        delete row.idList;
+        delete row.langList;
+        delete row.errorTypeList;
+
+        return row;
+      });
+    }
+
+    function dedupeAlertRows(rows, finalRows) {
+      const finalMap = new Map();
+      finalRows.forEach(row => {
+        finalMap.set(row.groupKey, row);
+      });
+
+      const map = new Map();
+
+      rows.forEach(row => {
+        const groupKey = row.groupKey;
+
+        if (!map.has(groupKey)) {
+          const finalRow = finalMap.get(groupKey);
+
+          map.set(groupKey, {
+            sourceUid: finalRow ? finalRow.uid : 'alert_' + uidCounter++,
+            idList: [],
+            langList: [],
+            filterZhList: [],
+            errorTypeList: [],
+            id: '',
+            key: row.key,
+            lang: '',
+            fullZh: row.fullZh,
+            filterZh: '',
+            wrongTrans: row.wrongTrans,
+            editJp: row.editJp,
+            errorType: row.errorType,
+            errorLevel: row.errorLevel,
+            status: 'pending',
+            groupKey: groupKey
+          });
+        }
+
+        const target = map.get(groupKey);
+
+        pushUnique(target.idList, row.id);
+        pushUnique(target.langList, row.lang);
+        pushUnique(target.filterZhList, row.filterZh);
+        pushUnique(target.errorTypeList, row.errorType);
+
+        if (!target.wrongTrans && row.wrongTrans) {
+          target.wrongTrans = row.wrongTrans;
+        }
+
+        if (!target.editJp && row.editJp) {
+          target.editJp = row.editJp;
+        }
+
+        target.errorLevel = getHigherErrorLevel(target.errorLevel, row.errorLevel);
+      });
+
+      return Array.from(map.values()).map(row => {
+        row.id = row.idList.join('\n');
+        row.lang = row.langList.join('\n');
+        row.filterZh = row.filterZhList.join('\n');
+        row.errorType = row.errorTypeList.join('\n');
+
+        delete row.idList;
+        delete row.langList;
+        delete row.filterZhList;
+        delete row.errorTypeList;
+
+        return row;
+      });
+    }
+
+    function pushUnique(arr, value) {
+      const text = String(value ?? '').trim();
+      if (!text) return;
+      if (!arr.includes(text)) {
+        arr.push(text);
+      }
+    }
+
+    function renderAlertTable() {
+      const container = document.getElementById('alertTableWrap');
+
+      if (!alertData.length) {
         container.innerHTML = '<div class="placeholder" style="padding:16px;">暂无数据</div>';
         return;
       }
 
-      let html = '<table><thead><tr>';
+      let html = `
+        <table>
+          <thead>
+            <tr>
+              <th>状态</th>
+              <th>操作</th>
+              <th>错误级别</th>
+              <th>错误类型</th>
+              <th>id</th>
+              <th>key</th>
+              <th>语言版本</th>
+              <th>参数全量表-中文原文</th>
+              <th>筛选表-中文</th>
+              <th>修改后译文 jp</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
 
-      columns.forEach(col => {
-        html += `<th>${col.label}</th>`;
-      });
-
-      html += '</tr></thead><tbody>';
-
-      data.forEach(row => {
-        html += '<tr>';
-        columns.forEach(col => {
-          html += `<td>${escapeHtml(row[col.key] ?? '')}</td>`;
-        });
-        html += '</tr>';
+      alertData.forEach(row => {
+        html += `
+          <tr>
+            <td>${renderStatusTag(row.status)}</td>
+            <td>
+              <button class="small-btn ignore" onclick="ignoreAlertRow('${row.sourceUid}')">忽略</button>
+              <button class="small-btn checked" onclick="checkAlertRow('${row.sourceUid}')">已检查</button>
+            </td>
+            <td>${renderErrorLevelTag(row.errorLevel)}</td>
+            <td>${renderMultiLine(row.errorType)}</td>
+            <td>${renderMultiLine(row.id)}</td>
+            <td>${escapeHtml(row.key)}</td>
+            <td>${renderMultiLine(row.lang)}</td>
+            <td>${escapeHtml(row.fullZh)}</td>
+            <td>${renderMultiLine(row.filterZh)}</td>
+            <td>
+              <textarea class="edit-jp" id="alert_jp_${row.sourceUid}">${escapeHtml(row.editJp)}</textarea>
+            </td>
+          </tr>
+        `;
       });
 
       html += '</tbody></table>';
       container.innerHTML = html;
     }
 
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+    function renderFinalTable() {
+      const container = document.getElementById('finalTableWrap');
+
+      if (!finalData.length) {
+        container.innerHTML = '<div class="placeholder" style="padding:16px;">暂无数据</div>';
+        return;
+      }
+
+      let html = `
+        <table>
+          <thead>
+            <tr>
+              <th>进入上传表</th>
+              <th>操作</th>
+              <th>状态</th>
+              <th>错误级别</th>
+              <th>错误类型</th>
+              <th>id</th>
+              <th>key</th>
+              <th>语言版本</th>
+              <th>zh 中文原文</th>
+              <th>修改后译文 jp</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      finalData.forEach(row => {
+        const checked = row.includeUpload && !row.ignored ? 'checked' : '';
+        const disabled = row.ignored ? 'disabled' : '';
+
+        html += `
+          <tr>
+            <td>
+              <input type="checkbox" id="inc_${row.uid}" ${checked} ${disabled} />
+            </td>
+            <td>
+              <button class="small-btn ignore" onclick="ignoreFinalRow('${row.uid}')">忽略</button>
+            </td>
+            <td>${renderFinalStatus(row)}</td>
+            <td>${renderErrorLevelTag(row.errorLevel)}</td>
+            <td>${renderMultiLine(row.errorType)}</td>
+            <td>${renderMultiLine(row.id)}</td>
+            <td>${escapeHtml(row.key)}</td>
+            <td>${renderMultiLine(row.lang)}</td>
+            <td>${escapeHtml(row.zh)}</td>
+            <td>
+              <textarea class="edit-jp" id="jp_${row.uid}" ${row.ignored ? 'disabled' : ''}>${escapeHtml(row.editJp)}</textarea>
+            </td>
+          </tr>
+        `;
+      });
+
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    function ignoreFinalRow(uid) {
+      updateDataFromDom();
+
+      const row = finalData.find(r => r.uid === uid);
+      if (!row) return;
+
+      row.ignored = true;
+      row.includeUpload = false;
+
+      if (row.isAlert) {
+        row.alertStatus = 'ignored';
+      }
+
+      const alertRow = alertData.find(a => a.sourceUid === uid);
+      if (alertRow) {
+        alertRow.status = 'ignored';
+      }
+
+      renderAlertTable();
+      renderFinalTable();
+    }
+
+    function ignoreAlertRow(uid) {
+      updateDataFromDom();
+
+      const alertRow = alertData.find(a => a.sourceUid === uid);
+      const finalRow = finalData.find(r => r.uid === uid);
+
+      if (alertRow) {
+        alertRow.status = 'ignored';
+      }
+
+      if (finalRow) {
+        finalRow.ignored = true;
+        finalRow.includeUpload = false;
+        finalRow.alertStatus = 'ignored';
+      }
+
+      renderAlertTable();
+      renderFinalTable();
+    }
+
+    function checkAlertRow(uid) {
+      updateDataFromDom();
+
+      const alertRow = alertData.find(a => a.sourceUid === uid);
+      const finalRow = finalData.find(r => r.uid === uid);
+
+      if (alertRow) {
+        alertRow.status = 'checked';
+      }
+
+      if (finalRow) {
+        finalRow.ignored = false;
+        finalRow.includeUpload = true;
+        finalRow.alertStatus = 'checked';
+
+        if (alertRow) {
+          finalRow.editJp = alertRow.editJp;
+        }
+      }
+
+      renderAlertTable();
+      renderFinalTable();
+    }
+
+    function renderStatusTag(status) {
+      if (status === 'checked') return '<span class="tag checked">已检查</span>';
+      if (status === 'ignored') return '<span class="tag ignored">已忽略</span>';
+      return '<span class="tag pending">待检查</span>';
+    }
+
+    function renderFinalStatus(row) {
+      if (row.ignored) return '<span class="tag ignored">已忽略</span>';
+      if (row.isAlert && row.alertStatus === 'pending') return '<span class="tag pending">提醒待检查</span>';
+      if (row.isAlert && row.alertStatus === 'checked') return '<span class="tag checked">提醒已检查</span>';
+      if (row.isAlert && row.alertStatus === 'ignored') return '<span class="tag ignored">提醒已忽略</span>';
+      return '<span class="tag normal">待修改</span>';
+    }
+
+    function renderErrorLevelTag(errorLevel) {
+      const type = normalizeErrorLevel(errorLevel);
+
+      if (type === '阻断') return '<span class="level-tag block">阻断</span>';
+      if (type === '致命') return '<span class="level-tag fatal">致命</span>';
+      if (type === '提醒') return '<span class="level-tag notice">提醒</span>';
+      if (type === '警告') return '<span class="level-tag warn">警告</span>';
+
+      return '<span class="level-tag empty">空</span>';
+    }
+
+    function renderMultiLine(value) {
+      return `<span class="multi-line">${escapeHtml(value)}</span>`;
+    }
+
+    function updateDataFromDom() {
+      finalData.forEach(row => {
+        const jpEl = document.getElementById('jp_' + row.uid);
+        const incEl = document.getElementById('inc_' + row.uid);
+
+        if (jpEl) row.editJp = jpEl.value;
+        if (incEl) row.includeUpload = incEl.checked;
+      });
+
+      alertData.forEach(row => {
+        const jpEl = document.getElementById('alert_jp_' + row.sourceUid);
+        if (jpEl) row.editJp = jpEl.value;
+
+        const finalRow = finalData.find(r => r.uid === row.sourceUid);
+        if (finalRow) {
+          finalRow.alertStatus = row.status;
+
+          if (row.status === 'checked') {
+            finalRow.editJp = row.editJp;
+            finalRow.includeUpload = true;
+            finalRow.ignored = false;
+          }
+
+          if (row.status === 'ignored') {
+            finalRow.includeUpload = false;
+            finalRow.ignored = true;
+          }
+        }
+      });
     }
 
     function exportResults() {
@@ -674,6 +1275,11 @@
         return;
       }
 
+      updateDataFromDom();
+
+      finalData = sortByErrorLevel(finalData);
+      alertData = sortByErrorLevel(alertData);
+
       const wb = XLSX.utils.book_new();
 
       const finalSheetData = finalData.map(row => ({
@@ -681,9 +1287,14 @@
         key: row.key,
         语言版本: row.lang,
         中文原文: row.zh,
-        错误译文: row.wrongTrans,
+        原错误译文: row.wrongTrans,
+        修改后译文: row.editJp,
         错误类型: row.errorType,
-        阻断类型: row.blockType
+        错误级别: row.errorLevel,
+        是否提醒项: row.isAlert ? '是' : '否',
+        提醒处理状态: row.isAlert ? getStatusText(row.alertStatus) : '',
+        是否忽略: row.ignored ? '是' : '否',
+        是否进入上传表: row.includeUpload && !row.ignored ? '是' : '否'
       }));
 
       const alertSheetData = alertData.map(row => ({
@@ -691,9 +1302,12 @@
         key: row.key,
         语言版本: row.lang,
         参数全量表中文原文: row.fullZh,
-        错误译文: row.wrongTrans,
+        筛选表中文: row.filterZh,
+        原错误译文: row.wrongTrans,
+        修改后译文: row.editJp,
         错误类型: row.errorType,
-        阻断类型: row.blockType
+        错误级别: row.errorLevel,
+        提醒处理状态: getStatusText(row.status)
       }));
 
       const ws1 = XLSX.utils.json_to_sheet(finalSheetData);
@@ -705,11 +1319,113 @@
       XLSX.writeFile(wb, '最强蜗牛_日语本地化_参数检查结果.xlsx');
     }
 
+    function exportUploadExcel() {
+      if (!finalData.length) {
+        alert('暂无可导出的上传表，请先执行参数检查。');
+        return;
+      }
+
+      updateDataFromDom();
+
+      const pendingAlerts = alertData.filter(row => row.status === 'pending');
+
+      if (pendingAlerts.length) {
+        const sample = pendingAlerts.slice(0, 10).map(row => {
+          return `key：${row.key}，中文原文：${row.fullZh}`;
+        }).join('\n');
+
+        alert(
+          '请先处理“单独提醒”中的待检查项目。\n\n' +
+          '这些项目存在 key 相同但中文不同的情况，需要点击“忽略”或“已检查”后，才能导出本地化工具上传表。\n\n' +
+          sample +
+          (pendingAlerts.length > 10 ? `\n……等共 ${pendingAlerts.length} 条` : '')
+        );
+        return;
+      }
+
+      finalData = sortByErrorLevel(finalData);
+
+      const batchName = getNormalizedBatchName();
+      const uploadRows = [];
+
+      finalData.forEach(row => {
+        if (row.ignored) return;
+        if (!row.includeUpload) return;
+        if (!row.key) return;
+
+        uploadRows.push({
+          翻译上传批次: batchName,
+          key: row.key,
+          zh: row.zh,
+          jp: row.editJp
+        });
+      });
+
+      if (!uploadRows.length) {
+        alert('没有可进入上传表的数据。请确认是否全部被忽略或取消勾选。');
+        return;
+      }
+
+      const dedupedRows = dedupeUploadRows(uploadRows);
+
+      const ws = XLSX.utils.json_to_sheet(dedupedRows, {
+        header: ['翻译上传批次', 'key', 'zh', 'jp']
+      });
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '上传表');
+
+      XLSX.writeFile(wb, `${batchName}.xlsx`);
+    }
+
+    function dedupeUploadRows(rows) {
+      const map = new Map();
+
+      rows.forEach(row => {
+        const dedupeKey = `${row.key}||${row.zh}`;
+        if (!map.has(dedupeKey)) {
+          map.set(dedupeKey, row);
+        }
+      });
+
+      return Array.from(map.values());
+    }
+
+    function getStatusText(status) {
+      if (status === 'checked') return '已检查';
+      if (status === 'ignored') return '已忽略';
+      if (status === 'pending') return '待检查';
+      return '';
+    }
+
+    function getTodayMMdd() {
+      const now = new Date();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      return mm + dd;
+    }
+
+    function getNormalizedBatchName() {
+      const input = document.getElementById('uploadBatch').value.trim();
+      const today = getTodayMMdd();
+
+      if (!input) {
+        return today + '参数检查上传';
+      }
+
+      if (/^\d{4}/.test(input)) {
+        return input.replace(/^\d{4}/, today);
+      }
+
+      return today + input;
+    }
+
     function resetAll() {
       fullData = [];
       filterData = [];
       finalData = [];
       alertData = [];
+      uidCounter = 1;
 
       document.getElementById('fullFile').value = '';
       document.getElementById('filterFile').value = '';
@@ -722,11 +1438,22 @@
       document.getElementById('countFinal').textContent = '0';
       document.getElementById('countAlert').textContent = '0';
 
+      document.getElementById('uploadBatch').value = getTodayMMdd() + '参数检查上传';
+
       document.getElementById('alertTableWrap').innerHTML =
         '<div class="placeholder" style="padding:16px;">暂无数据</div>';
 
       document.getElementById('finalTableWrap').innerHTML =
         '<div class="placeholder" style="padding:16px;">暂无数据</div>';
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
   </script>
 </body>
