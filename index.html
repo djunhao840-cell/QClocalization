@@ -19,11 +19,9 @@
       --warn: #9a5b00;
       --shadow: 0 8px 24px rgba(16, 24, 40, 0.08);
     }
-
     * {
       box-sizing: border-box;
     }
-
     body {
       margin: 0;
       min-height: 100vh;
@@ -32,39 +30,32 @@
       font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
       font-size: 14px;
     }
-
     button,
     input,
     select,
     textarea {
       font: inherit;
     }
-
     .app {
       width: min(1760px, calc(100vw - 20px));
       margin: 0 auto;
       padding: 24px 0 40px;
     }
-
     .workspace {
       display: grid;
       grid-template-columns: 260px minmax(0, 1fr);
       gap: 16px;
       align-items: start;
     }
-
     .workspace > * {
       min-width: 0;
     }
-
     .workspace.nav-collapsed {
       grid-template-columns: 44px minmax(0, 1fr);
     }
-
     .page-stack {
       min-width: 0;
     }
-
     .side-nav {
       position: sticky;
       top: 16px;
@@ -74,18 +65,15 @@
       box-shadow: var(--shadow);
       padding: 14px;
     }
-
     .side-nav.collapsed {
       width: 44px;
       padding: 8px 6px;
       overflow: hidden;
     }
-
     .side-nav.collapsed .side-title,
     .side-nav.collapsed .nav-group {
       display: none;
     }
-
     .nav-toggle {
       width: 100%;
       min-height: 32px;
@@ -97,22 +85,18 @@
       cursor: pointer;
       font-weight: 700;
     }
-
     .side-nav.collapsed .nav-toggle {
       margin-bottom: 0;
       padding: 0;
     }
-
     .side-title {
       margin: 0 0 12px;
       font-size: 16px;
       line-height: 1.35;
     }
-
     .nav-group {
       margin-bottom: 10px;
     }
-
     .nav-main,
     .nav-sub {
       width: 100%;
@@ -124,61 +108,51 @@
       text-align: left;
       transition: 0.15s ease;
     }
-
     .nav-main {
       min-height: 40px;
       padding: 9px 10px;
       font-weight: 700;
     }
-
     .nav-main:hover,
     .nav-sub:hover {
       background: #f3f7fb;
       border-color: var(--line);
     }
-
     .nav-main.active {
       background: var(--primary);
       border-color: var(--primary);
       color: #fff;
     }
-
     .nav-sublist {
       display: none;
       gap: 6px;
       padding: 8px 0 0 12px;
     }
-
     .nav-group.open .nav-sublist {
       display: grid;
     }
-
     .nav-sub {
       min-height: 34px;
       padding: 7px 10px;
       color: var(--muted);
       font-size: 13px;
     }
-
     .nav-sub.active {
       background: var(--primary-soft);
       border-color: #9cc4e5;
       color: var(--primary);
       font-weight: 700;
     }
-
     .page,
     .tool-page,
     .pc-result-view {
       display: none;
     }
-
     .page.active,
     .tool-page.active,
     .pc-result-view.active {
       display: block;
     }
-
     .topbar {
       display: flex;
       align-items: flex-end;
@@ -186,26 +160,22 @@
       gap: 16px;
       margin-bottom: 18px;
     }
-
     h1 {
       margin: 0 0 6px;
       font-size: 24px;
       line-height: 1.25;
     }
-
     .sub {
       color: var(--muted);
       margin: 0;
       line-height: 1.6;
     }
-
     .layout {
       display: grid;
       grid-template-columns: 360px minmax(0, 1fr);
       gap: 16px;
       align-items: start;
     }
-
     .panel {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -213,7 +183,6 @@
       box-shadow: var(--shadow);
       margin-bottom: 16px;
     }
-
     .panel-header {
       padding: 16px 18px;
       border-bottom: 1px solid var(--line);
@@ -222,46 +191,38 @@
       justify-content: space-between;
       gap: 12px;
     }
-
     .panel-title {
       margin: 0;
       font-size: 16px;
       line-height: 1.35;
     }
-
     .panel-body {
       padding: 18px;
     }
-
     .section {
       padding-bottom: 18px;
       margin-bottom: 18px;
       border-bottom: 1px solid var(--line);
     }
-
     .section:last-child {
       margin-bottom: 0;
       padding-bottom: 0;
       border-bottom: 0;
     }
-
     .section-title {
       margin: 0 0 12px;
       font-size: 14px;
       font-weight: 700;
     }
-
     .field {
       display: grid;
       gap: 7px;
       margin-bottom: 12px;
     }
-
     .field label {
       color: var(--muted);
       font-size: 13px;
     }
-
     input[type="text"],
     input[type="file"],
     select {
@@ -273,11 +234,9 @@
       color: var(--text);
       padding: 8px 10px;
     }
-
     input[type="file"] {
       padding: 7px;
     }
-
     textarea {
       width: 100%;
       min-height: 90px;
@@ -288,14 +247,12 @@
       line-height: 1.6;
       background: #fff;
     }
-
     .btn-row {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
       align-items: center;
     }
-
     .btn {
       min-height: 36px;
       border: 1px solid var(--line);
@@ -307,30 +264,25 @@
       transition: 0.15s ease;
       white-space: nowrap;
     }
-
     .btn:hover {
       border-color: var(--primary);
       color: var(--primary);
     }
-
     .btn.primary {
       background: var(--primary);
       border-color: var(--primary);
       color: #fff;
     }
-
     .btn.primary:hover {
       background: #145b92;
       color: #fff;
     }
-
     .btn.active {
       background: var(--primary-soft);
       border-color: var(--primary);
       color: var(--primary);
       font-weight: 700;
     }
-
     .btn.subtab {
       min-height: 32px;
       padding: 5px 10px;
@@ -338,19 +290,16 @@
       border-color: transparent;
       background: #eef1f6;
     }
-
     .btn.subtab.active {
       background: #d9eaf8;
       border-color: #9cc4e5;
     }
-
     .hint {
       color: var(--muted);
       font-size: 13px;
       line-height: 1.6;
       margin: 8px 0 0;
     }
-
     .notice {
       padding: 12px 14px;
       border: 1px solid #f0d38a;
@@ -360,12 +309,10 @@
       line-height: 1.6;
       margin-bottom: 10px;
     }
-
     .notice a {
       color: var(--primary);
       font-weight: 700;
     }
-
     .toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -375,7 +322,6 @@
       padding: 14px 18px;
       border-bottom: 1px solid var(--line);
     }
-
     .toolbar-side {
       display: flex;
       flex-wrap: wrap;
@@ -384,14 +330,12 @@
       color: var(--muted);
       font-size: 13px;
     }
-
     .summary {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
       align-items: center;
     }
-
     .pill {
       display: inline-flex;
       align-items: center;
@@ -403,24 +347,20 @@
       color: var(--muted);
       font-size: 13px;
     }
-
     .pill strong {
       color: var(--text);
       margin-left: 4px;
     }
-
     .table-wrap {
       overflow: auto;
       max-height: 680px;
       border-radius: 8px;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
       min-width: 860px;
     }
-
     th,
     td {
       border-bottom: 1px solid var(--line);
@@ -429,7 +369,6 @@
       vertical-align: top;
       line-height: 1.5;
     }
-
     th {
       position: sticky;
       top: 0;
@@ -439,18 +378,15 @@
       font-size: 13px;
       white-space: nowrap;
     }
-
     tbody tr:hover {
       background: #f6fbff;
     }
-
     .empty {
       padding: 48px 18px;
       color: var(--muted);
       text-align: center;
       line-height: 1.7;
     }
-
     mark {
       background: #fff0a8;
       color: inherit;
@@ -458,24 +394,20 @@
       padding: 0 2px;
       border-radius: 3px;
     }
-
     mark.diff-remove {
       background: #ffe1e1;
       color: #9f1d1d;
       text-decoration: line-through;
     }
-
     mark.diff-add {
       background: #dff7e8;
       color: #17633b;
     }
-
     .diff-note {
       color: var(--muted);
       font-size: 12px;
       line-height: 1.5;
     }
-
     .status {
       min-height: 22px;
       color: var(--muted);
@@ -483,15 +415,12 @@
       margin-top: 8px;
       white-space: pre-line;
     }
-
     .status.ok {
       color: var(--success);
     }
-
     .status.err {
       color: var(--danger);
     }
-
     .slot {
       border: 1px dashed #aab4c3;
       border-radius: 8px;
@@ -500,32 +429,27 @@
       background: #fbfcff;
       line-height: 1.6;
     }
-
     .pc-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 14px;
     }
-
     .pc-upload-box {
       border: 1px dashed #a9bed3;
       background: #f8fbff;
       border-radius: 8px;
       padding: 14px;
     }
-
     .pc-upload-box h4 {
       margin: 0 0 8px;
       font-size: 15px;
     }
-
     .pc-upload-box p {
       margin: 6px 0;
       color: var(--muted);
       font-size: 13px;
       line-height: 1.6;
     }
-
     .pc-desc,
     .pc-note {
       line-height: 1.8;
@@ -535,44 +459,37 @@
       border-radius: 8px;
       margin-bottom: 12px;
     }
-
     .pc-note {
       color: var(--warn);
       background: #fff8e7;
       border-color: #f0d38a;
     }
-
     .pc-summary {
       display: grid;
       grid-template-columns: repeat(4, minmax(120px, 1fr));
       gap: 10px;
     }
-
     .pc-summary-item {
       background: #f9fafc;
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 12px;
     }
-
     .pc-summary-item .label {
       color: var(--muted);
       font-size: 13px;
       margin-bottom: 6px;
     }
-
     .pc-summary-item .value {
       color: var(--text);
       font-size: 24px;
       font-weight: 700;
     }
-
     .pc-edit-jp {
       min-width: 320px;
       min-height: 120px;
       font-size: 13px;
     }
-
     .pc-result-tabs {
       display: flex;
       flex-wrap: wrap;
@@ -580,7 +497,6 @@
       align-items: center;
       margin-bottom: 14px;
     }
-
     .tag,
     .pc-tag,
     .pc-level-tag,
@@ -593,90 +509,73 @@
       padding: 3px 8px;
       white-space: nowrap;
     }
-
     .pc-tag.pending,
     .gc-type-tag.warn,
     .tag.warn {
       color: #92400e;
       background: #fef3c7;
     }
-
     .pc-tag.checked {
       color: #1d4ed8;
       background: #dbeafe;
     }
-
     .pc-tag.ignored,
     .gc-type-tag.ref,
     .tag.ref {
       color: #374151;
       background: #e5e7eb;
     }
-
     .pc-tag.normal,
     .gc-type-tag.edit,
     .tag.edit {
       color: #047857;
       background: #d1fae5;
     }
-
     .pc-level-tag.block {
       color: #991b1b;
       background: #fee2e2;
     }
-
     .pc-level-tag.fatal {
       color: #9a3412;
       background: #ffedd5;
     }
-
     .pc-level-tag.notice {
       color: #92400e;
       background: #fef3c7;
     }
-
     .pc-level-tag.warn {
       color: #1d4ed8;
       background: #dbeafe;
     }
-
     .pc-level-tag.empty {
       color: #6b7280;
       background: #f3f4f6;
     }
-
     .pc-multi-line,
     .gc-multi {
       white-space: pre-line;
     }
-
     .gc-table table {
       min-width: 1380px;
     }
-
     @media (max-width: 980px) {
       .workspace,
       .workspace.nav-collapsed {
         grid-template-columns: 1fr;
       }
-
       .side-nav {
         position: static;
       }
-
       .side-nav.collapsed {
         width: auto;
       }
-
       .layout {
         grid-template-columns: 1fr;
       }
-
       .topbar {
         align-items: flex-start;
         flex-direction: column;
       }
-
       .pc-grid,
       .pc-summary {
         grid-template-columns: 1fr;
@@ -684,7 +583,6 @@
     }
   </style>
 </head>
-
 <body>
   <main class="app">
     <div class="workspace">
@@ -719,7 +617,7 @@
               <h1>肥鹅本地化</h1>
               <p class="sub">支持 Langs / Labels 对比、上传表导出、术语库上传、Xbench 一致性离线修复。</p>
             </div>
-            <div class="btn-row">
+            <div class="btn-row" id="gooseSheetTabs">
               <button class="btn active" data-sheet-tab="Langs">Langs</button>
               <button class="btn" data-sheet-tab="Labels">Labels</button>
             </div>
@@ -888,6 +786,7 @@
                 <button class="btn subtab" data-goose-term-tab="gooseTermDeleted">已人工删除复盘</button>
                 <button class="btn" id="gooseTermDeleteBadBtn">一键删除异常术语</button>
               </div>
+
               <div class="table-wrap pc-result-view active" id="gooseTermChanged">
                 <div class="empty">暂无数据。此处保留原术语库上传逻辑接入位置。</div>
               </div>
@@ -972,7 +871,6 @@
                   <span class="pill">旧文本参考<strong id="gcReferenceCount">0</strong></span>
                   <span class="pill">全局提醒<strong id="gcReminderCount">0</strong></span>
                 </div>
-
                 <div class="notice">
                   逻辑：不会先过滤翻译批次为空的旧文本。系统会先用 Xbench 每个问题组里的 Source + Target 去匹配对应 Sheet 的全量表 zh + jp。
                   翻译批次为空的记录作为旧文本参考；翻译批次非空的记录进入离线编辑表。
@@ -1170,7 +1068,11 @@
     async function readFirstSheetAoa(file) {
       const workbook = await readWorkbook(file);
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      return XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "", blankrows: false });
+      return XLSX.utils.sheet_to_json(sheet, {
+        header: 1,
+        defval: "",
+        blankrows: false
+      });
     }
 
     function downloadAoa(rows, sheetName, fileName) {
@@ -1287,6 +1189,7 @@
 
     function findDuplicates(rows) {
       const counts = new Map();
+
       rows.forEach(row => {
         if (!row.key) return;
         counts.set(row.key, (counts.get(row.key) || 0) + 1);
@@ -1551,10 +1454,8 @@
 
         rows.forEach((row, index) => {
           if (index === 0) return;
-
           const range = cleanCell(row[0]);
           const key = cleanCell(row[1]);
-
           if (key) rangeMap.set(key, range);
         });
 
@@ -1695,6 +1596,14 @@
       document.querySelectorAll(`#${pageId} .tool-page`).forEach(tool => {
         tool.classList.toggle("active", tool.id === selectedTool);
       });
+
+      const gooseSheetTabs = document.getElementById("gooseSheetTabs");
+      if (gooseSheetTabs) {
+        gooseSheetTabs.style.display =
+          pageId === "goosePage" && selectedTool === "gooseImportExportTool"
+            ? "flex"
+            : "none";
+      }
 
       window.scrollTo({
         top: 0,
@@ -2521,27 +2430,25 @@
     function gcNormalizeFullSheetRows(rows, sheetName) {
       let headerIndex = -1;
 
-      for (let i = 0; i < Math.min(rows.length, 50); i++) {
+      for (let i = 0; i < Math.min(rows.length, 80); i++) {
         const headers = (rows[i] || []).map(gcNormHeader);
 
-        if (
-          headers.includes("key") &&
-          (
-            headers.includes("zh") ||
-            headers.includes("zh-cn") ||
-            headers.includes("中文") ||
-            headers.includes("中文原文") ||
-            headers.includes("source")
-          ) &&
-          (
-            headers.includes("jp") ||
-            headers.includes("ja-jp") ||
-            headers.includes("日文") ||
-            headers.includes("日语") ||
-            headers.includes("译文") ||
-            headers.includes("target")
-          )
-        ) {
+        const hasKey = headers.includes("key") || headers.includes("键");
+        const hasZh =
+          headers.includes("zh") ||
+          headers.includes("zh-cn") ||
+          headers.includes("中文") ||
+          headers.includes("中文原文") ||
+          headers.includes("source");
+        const hasJp =
+          headers.includes("jp") ||
+          headers.includes("ja-jp") ||
+          headers.includes("日文") ||
+          headers.includes("日语") ||
+          headers.includes("译文") ||
+          headers.includes("target");
+
+        if (hasKey && hasZh && hasJp) {
           headerIndex = i;
           break;
         }
@@ -2551,34 +2458,102 @@
       const header = hasHeader ? rows[headerIndex] : [];
       const start = hasHeader ? headerIndex + 1 : 0;
 
-      const textBatchIdx = hasHeader
-        ? gcFindCol(header, ["文本包批次", "文本批次", "textBatch"], 0)
-        : 0;
+      let textBatchIdx = -1;
+      let transBatchIdx = -1;
+      let keyIdx = -1;
+      let zhIdx = -1;
+      let jpIdx = -1;
 
-      const transBatchIdx = hasHeader
-        ? gcFindCol(header, ["翻译批次", "翻译上传批次", "translationBatch"], 1)
-        : 1;
+      if (hasHeader) {
+        textBatchIdx = gcFindCol(header, ["文本包批次", "文本批次", "textBatch"], -1);
+        transBatchIdx = gcFindCol(header, ["翻译批次", "翻译上传批次", "translationBatch"], -1);
+        keyIdx = gcFindCol(header, ["key", "键"], -1);
+        zhIdx = gcFindCol(header, ["zh", "zh-CN", "中文", "中文原文", "source"], -1);
+        jpIdx = gcFindCol(header, ["jp", "ja-JP", "日文", "日语", "译文", "target"], -1);
+      } else {
+        const sampleRows = rows.slice(0, 30).filter(row => (row || []).some(cell => cleanCell(cell)));
 
-      const keyIdx = hasHeader
-        ? gcFindCol(header, ["key", "键"], 2)
-        : 2;
+        const layouts = [
+          {
+            name: "A=key,B=zh,C=jp",
+            textBatchIdx: -1,
+            transBatchIdx: -1,
+            keyIdx: 0,
+            zhIdx: 1,
+            jpIdx: 2
+          },
+          {
+            name: "A=翻译批次,B=key,C=zh,D=jp",
+            textBatchIdx: -1,
+            transBatchIdx: 0,
+            keyIdx: 1,
+            zhIdx: 2,
+            jpIdx: 3
+          },
+          {
+            name: "A=文本包批次,B=翻译批次,C=key,D=zh,E=jp",
+            textBatchIdx: 0,
+            transBatchIdx: 1,
+            keyIdx: 2,
+            zhIdx: 3,
+            jpIdx: 4
+          }
+        ];
 
-      const zhIdx = hasHeader
-        ? gcFindCol(header, ["zh", "zh-CN", "中文", "中文原文", "source"], 3)
-        : 3;
+        function hasCjk(text) {
+          return /[\u3400-\u9fff]/.test(String(text || ""));
+        }
 
-      const jpIdx = hasHeader
-        ? gcFindCol(header, ["jp", "ja-JP", "日文", "日语", "译文", "target"], 4)
-        : 4;
+        function hasKana(text) {
+          return /[\u3040-\u30ff]/.test(String(text || ""));
+        }
+
+        function scoreLayout(layout) {
+          let score = 0;
+
+          sampleRows.forEach(row => {
+            const key = cleanCell(row[layout.keyIdx]);
+            const zh = cleanCell(row[layout.zhIdx]);
+            const jp = cleanCell(row[layout.jpIdx]);
+
+            if (key) score += 3;
+            if (zh) score += 2;
+            if (jp) score += 2;
+
+            if (key && key !== zh && key !== jp) score += 2;
+            if (key && /[@_\-.A-Za-z0-9]/.test(key)) score += 2;
+            if (zh && hasCjk(zh)) score += 2;
+            if (jp && (hasKana(jp) || hasCjk(jp))) score += 1;
+
+            if (key && hasCjk(key) && !/[@_\-.A-Za-z0-9]/.test(key)) score -= 3;
+          });
+
+          return score;
+        }
+
+        const bestLayout = layouts
+          .map(layout => ({ ...layout, score: scoreLayout(layout) }))
+          .sort((a, b) => b.score - a.score)[0];
+
+        textBatchIdx = bestLayout.textBatchIdx;
+        transBatchIdx = bestLayout.transBatchIdx;
+        keyIdx = bestLayout.keyIdx;
+        zhIdx = bestLayout.zhIdx;
+        jpIdx = bestLayout.jpIdx;
+      }
+
+      function readCell(row, idx) {
+        return idx >= 0 ? cleanCell(row[idx]) : "";
+      }
 
       return rows.slice(start).map((row, index) => ({
         sheetName,
         rowNumber: start + index + 1,
-        textBatch: cleanCell(row[textBatchIdx]),
-        translationBatch: cleanCell(row[transBatchIdx]),
-        key: cleanCell(row[keyIdx]),
-        zh: cleanCell(row[zhIdx]),
-        jp: cleanCell(row[jpIdx])
+        textBatch: readCell(row, textBatchIdx),
+        translationBatch: readCell(row, transBatchIdx),
+        key: readCell(row, keyIdx),
+        zh: readCell(row, zhIdx),
+        jp: readCell(row, jpIdx)
       })).filter(row => row.key || row.zh || row.jp || row.textBatch || row.translationBatch);
     }
 
@@ -2635,7 +2610,15 @@
         gcRebuildFullIndexes();
         gcUpdateFullCounts();
 
-        setStatusByEl(statusEl, `已导入：${file.name}（${normalized.length} 行）`, "ok");
+        const keyCount = normalized.filter(row => row.key).length;
+        const emptyBatchCount = normalized.filter(row => row.key && !row.translationBatch).length;
+        const nonEmptyBatchCount = normalized.filter(row => row.key && row.translationBatch).length;
+
+        setStatusByEl(
+          statusEl,
+          `已导入：${file.name}（${normalized.length} 行，key ${keyCount} 条，翻译批次为空 ${emptyBatchCount} 条，翻译批次非空 ${nonEmptyBatchCount} 条）`,
+          "ok"
+        );
       } catch (error) {
         setStatusByEl(statusEl, `读取失败：${error.message}`, "err");
       }
@@ -2655,157 +2638,187 @@
       gcUpdateFullCounts();
     }
 
-     function gcBuildConsistencyData() {
-  if (!gcState.xbenchGroups.length) {
-    alert("请先导入 Xbench 结果表。");
-    return;
-  }
-
-  if (!gcState.fullRows.length) {
-    alert("请先导入 Langs 或 Labels 全量表。");
-    return;
-  }
-
-  const defaultBatch = cleanCell(gcEls.uploadBatch.value) || "0528一致性修复上传";
-
-  const editRows = [];
-  const reminderRows = [];
-  let matchedCount = 0;
-
-  gcState.xbenchGroups.forEach(group => {
-    const groupTargets = gcUniqueList(group.rows.map(row => row.target));
-    const groupSources = gcUniqueList(group.rows.map(row => row.source));
-    const groupAllMatchedRows = [];
-
-    group.rows.forEach((xrow, xrowIndex) => {
-      const pairKey = `${normText(xrow.source)}||${normText(xrow.target)}`;
-      // 用 Xbench 每一行 Source + Target 去全量表反查 key
-      const allMatches = gcState.fullIndex.get(pairKey) || [];
-
-      const matches = xrow.sheetName
-        ? allMatches.filter(row => row.sheetName === xrow.sheetName)
-        : allMatches;
-
-      if (!matches.length) {
-        reminderRows.push({
-          groupId: group.groupId,
-          sheetName: xrow.sheetName || "",
-          zh: xrow.source,
-          type: xrow.sheetName
-            ? `Xbench明细未匹配到${xrow.sheetName}全量表`
-            : "Xbench明细未匹配到全量表",
-          oldJp: "",
-          newJp: xrow.target,
-          oldKeys: "",
-          newKeys: "",
-          suggestion: "请确认 Xbench 结果是否来自当前全量表，或是否存在空格/换行差异。",
-          issueType: group.issueType,
-          comments: xrow.comments
-        });
-
+    function gcBuildConsistencyData() {
+      if (!gcState.xbenchGroups.length) {
+        alert("请先导入 Xbench 结果表。");
         return;
       }
 
-      matchedCount += matches.length;
-
-      matches.forEach((match, matchIndex) => {
-        groupAllMatchedRows.push(match);
-
-        const isEditable = Boolean(cleanCell(match.translationBatch));
-
-        editRows.push({
-          upload: isEditable ? "是" : "否",
-          groupId: group.groupId,
-          sheetName: match.sheetName,
-          issueType: group.issueType,
-          type: isEditable ? "可编辑" : "旧文本参考",
-          matchStatus: "已匹配",
-          key: match.key,
-          candidateKeys: match.key,
-          textBatch: match.textBatch,
-          oldTranslationBatch: match.translationBatch,
-          uploadBatch: defaultBatch,
-          zh: match.zh,
-          currentJp: match.jp,
-          fixedJp: match.jp,
-          oldReferenceJp: "",
-          oldReferenceKey: "",
-          groupTargets: groupTargets.join("\n"),
-          xbenchComments: xrow.comments,
-          note: isEditable
-            ? "该 key 翻译批次非空，可编辑。"
-            : "该 key 翻译批次为空：旧文本参考，不进入上传表。",
-          xbenchRow: xrow.xbenchRow,
-          matchOrder: `${xrowIndex + 1}-${matchIndex + 1}`
-        });
-      });
-    });
-
-    // 组内提醒：同一个 Source 下存在多种 Target
-    const editableRows = groupAllMatchedRows.filter(row => cleanCell(row.translationBatch));
-    const referenceRows = groupAllMatchedRows.filter(row => !cleanCell(row.translationBatch));
-
-    const editableJps = gcUniqueList(editableRows.map(row => row.jp));
-    const referenceJps = gcUniqueList(referenceRows.map(row => row.jp));
-    const editableKeys = gcUniqueList(editableRows.map(row => `${row.sheetName}:${row.key}`));
-    const referenceKeys = gcUniqueList(referenceRows.map(row => `${row.sheetName}:${row.key}`));
-    const groupSheets = gcUniqueList(groupAllMatchedRows.map(row => row.sheetName));
-
-    if (referenceRows.length && editableRows.length) {
-      const hasConflict = referenceJps.some(oldJp => editableJps.some(newJp => oldJp !== newJp));
-
-      if (hasConflict) {
-        reminderRows.push({
-          groupId: group.groupId,
-          sheetName: groupSheets.join("\n"),
-          zh: groupSources.join("\n"),
-          type: "新批次与旧文本译法不一致",
-          oldJp: referenceJps.join("\n"),
-          newJp: editableJps.join("\n"),
-          oldKeys: referenceKeys.join("\n"),
-          newKeys: editableKeys.join("\n"),
-          suggestion: "旧文本不上传，但作为参考。请确认新批次是否需要统一。",
-          issueType: group.issueType,
-          comments: ""
-        });
+      if (!gcState.fullRows.length) {
+        alert("请先导入 Langs 或 Labels 全量表。");
+        return;
       }
-    }
 
-    if (groupAllMatchedRows.length && !editableRows.length) {
-      reminderRows.push({
-        groupId: group.groupId,
-        sheetName: groupSheets.join("\n"),
-        zh: groupSources.join("\n"),
-        type: "该问题组仅匹配到旧文本",
-        oldJp: referenceJps.join("\n"),
-        newJp: "",
-        oldKeys: referenceKeys.join("\n"),
-        newKeys: "",
-        suggestion: "全部匹配项翻译批次为空，不进入上传表，仅作参考。",
-        issueType: group.issueType,
-        comments: ""
+      const defaultBatch = cleanCell(gcEls.uploadBatch.value) || "0528一致性修复上传";
+      const editRows = [];
+      const reminderRows = [];
+      let matchedCount = 0;
+
+      gcState.xbenchGroups.forEach(group => {
+        const groupTargets = gcUniqueList(group.rows.map(row => row.target));
+        const groupSources = gcUniqueList(group.rows.map(row => row.source));
+        const groupAllMatchedRows = [];
+        const pairMap = new Map();
+
+        group.rows.forEach(xrow => {
+          const pairKey = `${xrow.sheetName || ""}||${normText(xrow.source)}||${normText(xrow.target)}`;
+
+          if (!pairMap.has(pairKey)) {
+            pairMap.set(pairKey, {
+              source: xrow.source,
+              target: xrow.target,
+              sheetName: xrow.sheetName || "",
+              comments: xrow.comments,
+              xbenchRows: [],
+              rawRows: []
+            });
+          }
+
+          const target = pairMap.get(pairKey);
+          target.xbenchRows.push(xrow.xbenchRow);
+          target.rawRows.push(xrow);
+        });
+
+        pairMap.forEach(pair => {
+          const fullPairKey = `${normText(pair.source)}||${normText(pair.target)}`;
+          const allMatches = gcState.fullIndex.get(fullPairKey) || [];
+
+          const matches = pair.sheetName
+            ? allMatches.filter(row => row.sheetName === pair.sheetName)
+            : allMatches;
+
+          if (!matches.length) {
+            reminderRows.push({
+              groupId: group.groupId,
+              sheetName: pair.sheetName || "",
+              zh: pair.source,
+              type: pair.sheetName
+                ? `Xbench明细未匹配到${pair.sheetName}全量表`
+                : "Xbench明细未匹配到全量表",
+              oldJp: "",
+              newJp: pair.target,
+              oldKeys: "",
+              newKeys: "",
+              suggestion: "请确认 Xbench 结果是否来自当前全量表，或是否存在空格/换行差异。",
+              issueType: group.issueType,
+              comments: pair.comments
+            });
+            return;
+          }
+
+          matchedCount += matches.length;
+
+          if (matches.length !== pair.xbenchRows.length) {
+            reminderRows.push({
+              groupId: group.groupId,
+              sheetName: pair.sheetName || "",
+              zh: pair.source,
+              type: "Xbench明细数与全量表匹配key数不一致",
+              oldJp: "",
+              newJp: pair.target,
+              oldKeys: "",
+              newKeys: matches.map(row => `${row.sheetName}:${row.key}`).join("\n"),
+              suggestion: `Xbench中该译法出现 ${pair.xbenchRows.length} 次，但全量表匹配到 ${matches.length} 个key。请确认是否正常。`,
+              issueType: group.issueType,
+              comments: pair.comments
+            });
+          }
+
+          matches.forEach((match, matchIndex) => {
+            groupAllMatchedRows.push(match);
+
+            const isEditable = Boolean(cleanCell(match.translationBatch));
+
+            editRows.push({
+              upload: isEditable ? "是" : "否",
+              groupId: group.groupId,
+              xbenchRow: pair.xbenchRows[matchIndex] || pair.xbenchRows.join(","),
+              sheetName: match.sheetName,
+              issueType: group.issueType,
+              type: isEditable ? "可编辑" : "旧文本参考",
+              matchStatus: "已匹配",
+              key: match.key,
+              candidateKeys: match.key,
+              textBatch: match.textBatch,
+              oldTranslationBatch: match.translationBatch,
+              uploadBatch: defaultBatch,
+              zh: match.zh,
+              currentJp: match.jp,
+              fixedJp: match.jp,
+              oldReferenceJp: "",
+              oldReferenceKey: "",
+              groupTargets: groupTargets.join("\n"),
+              xbenchComments: pair.comments,
+              note: isEditable
+                ? "该 key 翻译批次非空，可编辑。"
+                : "该 key 翻译批次为空：旧文本参考，不进入上传表。",
+              matchOrder: `${pair.source}||${pair.target}||${matchIndex + 1}`
+            });
+          });
+        });
+
+        const editableRows = groupAllMatchedRows.filter(row => cleanCell(row.translationBatch));
+        const referenceRows = groupAllMatchedRows.filter(row => !cleanCell(row.translationBatch));
+
+        const editableJps = gcUniqueList(editableRows.map(row => row.jp));
+        const referenceJps = gcUniqueList(referenceRows.map(row => row.jp));
+        const editableKeys = gcUniqueList(editableRows.map(row => `${row.sheetName}:${row.key}`));
+        const referenceKeys = gcUniqueList(referenceRows.map(row => `${row.sheetName}:${row.key}`));
+        const groupSheets = gcUniqueList(groupAllMatchedRows.map(row => row.sheetName));
+
+        if (referenceRows.length && editableRows.length) {
+          const hasConflict = referenceJps.some(oldJp => editableJps.some(newJp => oldJp !== newJp));
+
+          if (hasConflict) {
+            reminderRows.push({
+              groupId: group.groupId,
+              sheetName: groupSheets.join("\n"),
+              zh: groupSources.join("\n"),
+              type: "新批次与旧文本译法不一致",
+              oldJp: referenceJps.join("\n"),
+              newJp: editableJps.join("\n"),
+              oldKeys: referenceKeys.join("\n"),
+              newKeys: editableKeys.join("\n"),
+              suggestion: "旧文本不上传，但作为参考。请确认新批次是否需要统一。",
+              issueType: group.issueType,
+              comments: ""
+            });
+          }
+        }
+
+        if (groupAllMatchedRows.length && !editableRows.length) {
+          reminderRows.push({
+            groupId: group.groupId,
+            sheetName: groupSheets.join("\n"),
+            zh: groupSources.join("\n"),
+            type: "该问题组仅匹配到旧文本",
+            oldJp: referenceJps.join("\n"),
+            newJp: "",
+            oldKeys: referenceKeys.join("\n"),
+            newKeys: "",
+            suggestion: "全部匹配项翻译批次为空，不进入上传表，仅作参考。",
+            issueType: group.issueType,
+            comments: ""
+          });
+        }
       });
+
+      const editDedupeMap = new Map();
+
+      editRows.forEach(row => {
+        const dedupeKey = `${row.groupId}||${row.sheetName}||${row.key}||${row.zh}||${row.currentJp}`;
+        if (!editDedupeMap.has(dedupeKey)) {
+          editDedupeMap.set(dedupeKey, row);
+        }
+      });
+
+      gcState.editRows = [...editDedupeMap.values()];
+      gcState.reminderRows = reminderRows;
+
+      gcRenderSummary(matchedCount);
+      gcRenderEditPreview();
+      gcRenderReminderPreview();
     }
-  });
-
-  // 去重：同一个 Sheet + key + zh + jp 不重复导出
-  const editDedupeMap = new Map();
-
-  editRows.forEach(row => {
-    const dedupeKey = `${row.groupId}||${row.sheetName}||${row.key}||${row.zh}||${row.currentJp}`;
-
-    if (!editDedupeMap.has(dedupeKey)) {
-      editDedupeMap.set(dedupeKey, row);
-    }
-  });
-
-  gcState.editRows = [...editDedupeMap.values()];
-  gcState.reminderRows = reminderRows;
-
-  gcRenderSummary(matchedCount);
-  gcRenderEditPreview();
-  gcRenderReminderPreview();
-}
 
     function gcRenderEditPreview() {
       if (!gcState.editRows.length) {
@@ -3268,6 +3281,7 @@
     gcEls.exportUploadLabelsBtn.addEventListener("click", () => gcExportUploadFromEdited("Labels"));
 
     render();
+    switchPage("goosePage", "gooseImportExportTool");
   </script>
 </body>
 </html>
