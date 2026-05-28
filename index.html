@@ -1,419 +1,683 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>《最强蜗牛》日语本地化流程表</title>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>肥鹅本地化 / 最强蜗牛本地化工具</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
+    :root {
+      --bg: #f6f7fb;
+      --panel: #ffffff;
+      --line: #d9dee8;
+      --text: #172033;
+      --muted: #667085;
+      --primary: #1769aa;
+      --primary-soft: #e7f1fa;
+      --danger: #bd2d2d;
+      --success: #1f7a4d;
+      --warn: #9a5b00;
+      --shadow: 0 8px 24px rgba(16, 24, 40, 0.08);
+    }
+
     * {
       box-sizing: border-box;
-      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
     }
 
     body {
       margin: 0;
-      background: #f5f7fb;
-      color: #222;
-    }
-
-    header {
-      background: linear-gradient(135deg, #4f46e5, #7c3aed);
-      color: #fff;
-      padding: 20px 28px;
-    }
-
-    header h1 {
-      margin: 0 0 8px;
-      font-size: 28px;
-    }
-
-    header p {
-      margin: 0;
-      opacity: 0.95;
-    }
-
-    .container {
-      display: flex;
-      min-height: calc(100vh - 96px);
-    }
-
-    .sidebar {
-      width: 240px;
-      background: #fff;
-      border-right: 1px solid #e5e7eb;
-      padding: 20px 16px;
-    }
-
-    .sidebar h2 {
-      font-size: 18px;
-      margin: 0 0 16px;
-    }
-
-    .nav-btn {
-      width: 100%;
-      display: block;
-      border: none;
-      background: #eef2ff;
-      color: #3730a3;
-      padding: 12px 14px;
-      border-radius: 10px;
-      margin-bottom: 12px;
-      cursor: pointer;
-      text-align: left;
+      min-height: 100vh;
+      color: var(--text);
+      background: var(--bg);
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
       font-size: 14px;
-      font-weight: 600;
-      transition: 0.2s;
     }
 
-    .nav-btn:hover {
-      background: #ddd6fe;
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
     }
 
-    .nav-btn.active {
-      background: #4f46e5;
-      color: #fff;
+    .app {
+      width: min(1760px, calc(100vw - 20px));
+      margin: 0 auto;
+      padding: 24px 0 40px;
     }
 
-    .main {
-      flex: 1;
-      padding: 24px;
+    .workspace {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
     }
 
-    .tab {
+    .workspace > * {
+      min-width: 0;
+    }
+
+    .workspace.nav-collapsed {
+      grid-template-columns: 44px minmax(0, 1fr);
+    }
+
+    .page-stack {
+      min-width: 0;
+    }
+
+    .side-nav {
+      position: sticky;
+      top: 16px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+
+    .side-nav.collapsed {
+      width: 44px;
+      padding: 8px 6px;
+      overflow: hidden;
+    }
+
+    .side-nav.collapsed .side-title,
+    .side-nav.collapsed .nav-group {
       display: none;
     }
 
-    .tab.active {
+    .nav-toggle {
+      width: 100%;
+      min-height: 32px;
+      margin-bottom: 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--primary);
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .side-nav.collapsed .nav-toggle {
+      margin-bottom: 0;
+      padding: 0;
+    }
+
+    .side-title {
+      margin: 0 0 12px;
+      font-size: 16px;
+      line-height: 1.35;
+    }
+
+    .nav-group {
+      margin-bottom: 10px;
+    }
+
+    .nav-main,
+    .nav-sub {
+      width: 100%;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+      transition: 0.15s ease;
+    }
+
+    .nav-main {
+      min-height: 40px;
+      padding: 9px 10px;
+      font-weight: 700;
+    }
+
+    .nav-main:hover,
+    .nav-sub:hover {
+      background: #f3f7fb;
+      border-color: var(--line);
+    }
+
+    .nav-main.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .nav-sublist {
+      display: none;
+      gap: 6px;
+      padding: 8px 0 0 12px;
+    }
+
+    .nav-group.open .nav-sublist {
+      display: grid;
+    }
+
+    .nav-sub {
+      min-height: 34px;
+      padding: 7px 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .nav-sub.active {
+      background: var(--primary-soft);
+      border-color: #9cc4e5;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .page,
+    .tool-page,
+    .pc-result-view {
+      display: none;
+    }
+
+    .page.active,
+    .tool-page.active,
+    .pc-result-view.active {
       display: block;
     }
 
-    .card {
-      background: #fff;
-      border-radius: 14px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
-    }
-
-    .card h3 {
-      margin-top: 0;
-      margin-bottom: 14px;
-      font-size: 20px;
-    }
-
-    .desc {
-      line-height: 1.8;
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      padding: 14px;
-      border-radius: 10px;
-      font-size: 14px;
-    }
-
-    .upload-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+    .topbar {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
       gap: 16px;
+      margin-bottom: 18px;
     }
 
-    .upload-box {
-      border: 1px dashed #c7d2fe;
-      background: #f8faff;
-      border-radius: 12px;
-      padding: 16px;
+    h1 {
+      margin: 0 0 6px;
+      font-size: 24px;
+      line-height: 1.25;
     }
 
-    .upload-box h4 {
-      margin: 0 0 10px;
+    .sub {
+      color: var(--muted);
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 360px minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+
+    .panel-header {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .panel-title {
+      margin: 0;
       font-size: 16px;
+      line-height: 1.35;
     }
 
-    .upload-box p {
-      margin: 6px 0;
-      color: #555;
+    .panel-body {
+      padding: 18px;
+    }
+
+    .section {
+      padding-bottom: 18px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+      margin-bottom: 12px;
+    }
+
+    .field label {
+      color: var(--muted);
       font-size: 13px;
-      line-height: 1.7;
+    }
+
+    input[type="text"],
+    input[type="file"],
+    select {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      padding: 8px 10px;
     }
 
     input[type="file"] {
-      margin-top: 12px;
+      padding: 7px;
     }
 
-    .actions {
-      margin-top: 16px;
+    textarea {
+      width: 100%;
+      min-height: 90px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      resize: vertical;
+      line-height: 1.6;
+      background: #fff;
+    }
+
+    .btn-row {
       display: flex;
-      gap: 12px;
       flex-wrap: wrap;
+      gap: 8px;
       align-items: center;
     }
 
-    button.action,
-    a.action-link {
-      border: none;
-      background: #4f46e5;
-      color: #fff;
-      padding: 10px 16px;
-      border-radius: 10px;
+    .btn {
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      padding: 7px 12px;
       cursor: pointer;
-      font-weight: 600;
-      font-size: 14px;
-      text-decoration: none;
-      display: inline-flex;
+      transition: 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .btn.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .btn.primary:hover {
+      background: #145b92;
+      color: #fff;
+    }
+
+    .btn.active {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .btn.subtab {
+      min-height: 32px;
+      padding: 5px 10px;
+      font-size: 13px;
+      border-color: transparent;
+      background: #eef1f6;
+    }
+
+    .btn.subtab.active {
+      background: #d9eaf8;
+      border-color: #9cc4e5;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      margin: 8px 0 0;
+    }
+
+    .notice {
+      padding: 12px 14px;
+      border: 1px solid #f0d38a;
+      border-radius: 8px;
+      background: #fff8e7;
+      color: var(--warn);
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .notice a {
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
       align-items: center;
-      justify-content: center;
-      line-height: 1.2;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
     }
 
-    button.action.secondary,
-    a.action-link.secondary {
-      background: #10b981;
-    }
-
-    button.action.gray,
-    a.action-link.gray {
-      background: #6b7280;
-    }
-
-    button.action.template,
-    a.action-link.template {
-      background: #f59e0b;
-    }
-
-    button.action.blue,
-    a.action-link.blue {
-      background: #2563eb;
-    }
-
-    button.action:hover,
-    a.action-link:hover {
-      opacity: 0.92;
-    }
-
-    .status {
-      margin-top: 12px;
-      font-size: 14px;
-      color: #374151;
+    .toolbar-side {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
     }
 
     .summary {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(120px, 1fr));
-      gap: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
     }
 
-    .summary-item {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      padding: 14px;
-      border-radius: 10px;
-    }
-
-    .summary-item .label {
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 4px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--muted);
       font-size: 13px;
-      color: #6b7280;
-      margin-bottom: 6px;
     }
 
-    .summary-item .value {
-      font-size: 24px;
-      font-weight: 700;
-      color: #111827;
+    .pill strong {
+      color: var(--text);
+      margin-left: 4px;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      max-height: 680px;
+      border-radius: 8px;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 13px;
-      margin-top: 12px;
-      background: #fff;
+      min-width: 860px;
     }
 
-    th, td {
-      border: 1px solid #e5e7eb;
-      padding: 8px 10px;
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
       text-align: left;
       vertical-align: top;
-      word-break: break-all;
+      line-height: 1.5;
     }
 
     th {
-      background: #f3f4f6;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #f9fafc;
+      color: #344054;
+      font-size: 13px;
       white-space: nowrap;
     }
 
-    .table-wrap {
-      overflow: auto;
-      max-height: 460px;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      background: #fff;
+    tbody tr:hover {
+      background: #f6fbff;
     }
 
-    .note {
-      color: #92400e;
-      background: #fffbeb;
-      border: 1px solid #fde68a;
-      padding: 12px;
-      border-radius: 10px;
-      font-size: 14px;
-      line-height: 1.8;
-      margin-bottom: 10px;
-    }
-
-    .placeholder {
-      color: #6b7280;
-      font-size: 14px;
-      line-height: 1.8;
-    }
-
-    .template-tip {
-      margin-top: 10px;
-      padding: 10px 12px;
-      background: #fff7ed;
-      border: 1px solid #fed7aa;
-      color: #9a3412;
-      border-radius: 8px;
-      font-size: 13px;
+    .empty {
+      padding: 48px 18px;
+      color: var(--muted);
+      text-align: center;
       line-height: 1.7;
     }
 
-    .batch-box {
-      margin-top: 14px;
-      padding: 12px;
-      background: #f0fdf4;
-      border: 1px solid #bbf7d0;
-      border-radius: 10px;
-      font-size: 14px;
-    }
-
-    .batch-box label {
+    mark {
+      background: #fff0a8;
+      color: inherit;
       font-weight: 700;
-      margin-right: 8px;
+      padding: 0 2px;
+      border-radius: 3px;
     }
 
-    .batch-box input {
-      width: 300px;
-      max-width: 100%;
-      padding: 8px 10px;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
+    mark.diff-remove {
+      background: #ffe1e1;
+      color: #9f1d1d;
+      text-decoration: line-through;
     }
 
-.edit-jp {
-  width: 360px;
-  min-height: 110px;
-  padding: 8px 10px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  resize: both;
-  font-size: 13px;
-  line-height: 1.6;
-  background: #fff;
-}
+    mark.diff-add {
+      background: #dff7e8;
+      color: #17633b;
+    }
 
-    .small-btn {
-      border: none;
-      padding: 6px 10px;
-      border-radius: 8px;
-      color: #fff;
-      cursor: pointer;
+    .diff-note {
+      color: var(--muted);
       font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .status {
+      min-height: 22px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+
+    .status.ok {
+      color: var(--success);
+    }
+
+    .status.err {
+      color: var(--danger);
+    }
+
+    .slot {
+      border: 1px dashed #aab4c3;
+      border-radius: 8px;
+      padding: 12px;
+      color: var(--muted);
+      background: #fbfcff;
+      line-height: 1.6;
+    }
+
+    .pc-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .pc-upload-box {
+      border: 1px dashed #a9bed3;
+      background: #f8fbff;
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .pc-upload-box h4 {
+      margin: 0 0 8px;
+      font-size: 15px;
+    }
+
+    .pc-upload-box p {
+      margin: 6px 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .pc-desc,
+    .pc-note {
+      line-height: 1.8;
+      background: #f9fafc;
+      border: 1px solid var(--line);
+      padding: 13px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+
+    .pc-note {
+      color: var(--warn);
+      background: #fff8e7;
+      border-color: #f0d38a;
+    }
+
+    .pc-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 10px;
+    }
+
+    .pc-summary-item {
+      background: #f9fafc;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .pc-summary-item .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .pc-summary-item .value {
+      color: var(--text);
+      font-size: 24px;
       font-weight: 700;
-      margin: 2px;
-      white-space: nowrap;
     }
 
-    .small-btn.ignore {
-      background: #6b7280;
+    .pc-edit-jp {
+      min-width: 320px;
+      min-height: 120px;
+      font-size: 13px;
     }
 
-    .small-btn.checked {
-      background: #2563eb;
+    .pc-result-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 14px;
     }
 
-    .tag {
+    .tag,
+    .pc-tag,
+    .pc-level-tag,
+    .gc-type-tag {
       display: inline-flex;
       align-items: center;
-      padding: 3px 8px;
       border-radius: 999px;
       font-size: 12px;
       font-weight: 700;
+      padding: 3px 8px;
       white-space: nowrap;
     }
 
-    .tag.pending {
+    .pc-tag.pending,
+    .gc-type-tag.warn,
+    .tag.warn {
       color: #92400e;
       background: #fef3c7;
     }
 
-    .tag.checked {
+    .pc-tag.checked {
       color: #1d4ed8;
       background: #dbeafe;
     }
 
-    .tag.ignored {
+    .pc-tag.ignored,
+    .gc-type-tag.ref,
+    .tag.ref {
       color: #374151;
       background: #e5e7eb;
     }
 
-    .tag.normal {
+    .pc-tag.normal,
+    .gc-type-tag.edit,
+    .tag.edit {
       color: #047857;
       background: #d1fae5;
     }
 
-    .level-tag {
-      display: inline-flex;
-      padding: 3px 8px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    .level-tag.block {
+    .pc-level-tag.block {
       color: #991b1b;
       background: #fee2e2;
     }
 
-    .level-tag.fatal {
+    .pc-level-tag.fatal {
       color: #9a3412;
       background: #ffedd5;
     }
 
-    .level-tag.notice {
+    .pc-level-tag.notice {
       color: #92400e;
       background: #fef3c7;
     }
 
-    .level-tag.warn {
+    .pc-level-tag.warn {
       color: #1d4ed8;
       background: #dbeafe;
     }
 
-    .level-tag.empty {
+    .pc-level-tag.empty {
       color: #6b7280;
       background: #f3f4f6;
     }
 
-    .multi-line {
+    .pc-multi-line,
+    .gc-multi {
       white-space: pre-line;
     }
 
-    @media (max-width: 900px) {
-      .container {
+    .gc-table table {
+      min-width: 1380px;
+    }
+
+    @media (max-width: 980px) {
+      .workspace,
+      .workspace.nav-collapsed {
+        grid-template-columns: 1fr;
+      }
+
+      .side-nav {
+        position: static;
+      }
+
+      .side-nav.collapsed {
+        width: auto;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        align-items: flex-start;
         flex-direction: column;
       }
 
-      .sidebar {
-        width: 100%;
-        border-right: none;
-        border-bottom: 1px solid #e5e7eb;
-      }
-
-      .upload-grid,
-      .summary {
+      .pc-grid,
+      .pc-summary {
         grid-template-columns: 1fr;
       }
     }
@@ -421,635 +685,1266 @@
 </head>
 
 <body>
-  <header>
-    <h1>《最强蜗牛》日语本地化流程表</h1>
-    <p>用于日语版本本地化流程说明、参数检查与后续处理。</p>
-  </header>
+  <main class="app">
+    <div class="workspace">
+      <aside class="side-nav" id="sideNav">
+        <button class="nav-toggle" id="navCollapseBtn" type="button" title="隐藏/展开左侧导航">《</button>
+        <h2 class="side-title">本地化工具</h2>
 
-  <div class="container">
-    <aside class="sidebar">
-      <h2>流程导航</h2>
-      <button class="nav-btn active" onclick="showTab('intro', this)">流程说明</button>
-      <button class="nav-btn" onclick="showTab('paramCheck', this)">① 参数检查</button>
-      <button class="nav-btn" onclick="showTab('todo2', this)">② 待补充</button>
-    </aside>
-
-    <main class="main">
-      <section id="intro" class="tab active">
-        <div class="card">
-          <h3>流程说明</h3>
-          <div class="desc">
-            <p><strong>本页面用于《最强蜗牛》日语本地化流程管理。</strong></p>
-            <p>当前已配置流程如下：</p>
-            <p>① <strong>参数检查</strong>：导入“参数全量表”和“筛选表”，根据 key 与中文原文进行比对，筛出最终需要修改的文本，并单独提示“key相同但中文不同”的异常情况。</p>
-            <p>② <strong>待补充</strong>：后续可继续新增如术语检查、QA检查、导出结果、提交记录等模块。</p>
-          </div>
-
-          <div class="actions">
-            <button class="action" onclick="jumpToParamCheck()">跳转到①参数检查</button>
-            <a class="action-link template" href="./filter_template.xlsx" download="筛选表模板.xlsx">
-              下载筛选表模板
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <section id="paramCheck" class="tab">
-        <div class="card">
-          <h3>① 参数检查</h3>
-          <div class="desc">
-            <p><strong>导入说明：</strong></p>
-            <p>1. <strong>参数全量表</strong>：与直接导出的<strong> Erros 表</strong>一致：</p>
-            <p>
-              A列：id，
-              B列：key，
-              C列：语言版本，
-              D列：中文原文，
-              E列：错误译文，
-              F列：错误类型，
-              G列：错误级别
-            </p>
-            <p><strong>错误类型：</strong>具体问题类型，仅展示和导出。</p>
-            <p><strong>错误级别：</strong>用于排序，优先级为：<strong>阻断 &gt; 致命 &gt; 提醒 &gt; 警告 &gt; 空</strong>。</p>
-
-            <p>2. <strong>筛选表</strong>：日语由于特殊处理，比如删去{race}，会在参数检查反复出现，为了节约时间填入此表可省略检查。结构如下：</p>
-            <p>A列：key，B列：中文，C列：译文</p>
-
-            <p><strong>比对规则：</strong></p>
-            <p>
-              当参数全量表中的 <strong>key = 筛选表中的 key</strong> 且
-              <strong>中文原文 = 中文</strong> 时，该条可删去；
-              如果 <strong>key 相同但中文原文 ≠ 中文</strong>，则不可删去，并输出为单独提醒；
-              剩余内容即为最终需要修改的文本。（防止中文变动）
-            </p>
-
-            <p><strong>去重规则：</strong></p>
-            <p>
-              修改栏和提醒栏均按 <strong>key + 中文原文</strong> 去重展示；
-              多个语言版本会合并到“语言版本”单元格中换行显示。
-            </p>
+        <div class="nav-group open">
+          <button class="nav-main active" data-page-target="goosePage">肥鹅本地化</button>
+          <div class="nav-sublist">
+            <button class="nav-sub active" data-page-target="goosePage" data-tool-target="gooseImportExportTool">导入与导出</button>
+            <button class="nav-sub" data-page-target="goosePage" data-tool-target="gooseTranslateTermTool">全量翻译与术语提取</button>
+            <button class="nav-sub" data-page-target="goosePage" data-tool-target="gooseTermConsistencyTool">术语库上传</button>
+            <button class="nav-sub" data-page-target="goosePage" data-tool-target="gooseXbenchConsistencyTool">术语一致性</button>
           </div>
         </div>
 
-        <div class="card">
-          <h3>文件导入</h3>
+        <div class="nav-group open" id="snailNavGroup">
+          <button class="nav-main" data-page-target="snailPage">最强蜗牛本地化</button>
+          <div class="nav-sublist">
+            <button class="nav-sub" data-page-target="snailPage" data-tool-target="paramCheckTool">参数检查工具</button>
+            <button class="nav-sub" data-page-target="snailPage" data-tool-target="snailTermPlaceholder">术语检查工具（待补充）</button>
+            <button class="nav-sub" data-page-target="snailPage" data-tool-target="snailQaPlaceholder">QA检查工具（待补充）</button>
+          </div>
+        </div>
+      </aside>
 
-          <div class="upload-grid">
-            <div class="upload-box">
-              <h4>参数全量表</h4>
-              <p>支持格式：.xlsx / .csv</p>
-              <p>字段：A=id / B=key / C=语言版本 / D=中文原文 / E=错误译文 / F=错误类型 / G=错误级别</p>
-              <input type="file" id="fullFile" accept=".xlsx,.xls,.csv" />
-              <div class="status" id="fullStatus">尚未导入文件</div>
+      <div class="page-stack">
+        <section class="page active" id="goosePage">
+          <header class="topbar">
+            <div>
+              <h1>肥鹅本地化</h1>
+              <p class="sub">支持 Langs / Labels 对比、上传表导出、术语库上传、Xbench 一致性离线修复。</p>
             </div>
+            <div class="btn-row">
+              <button class="btn active" data-sheet-tab="Langs">Langs</button>
+              <button class="btn" data-sheet-tab="Labels">Labels</button>
+            </div>
+          </header>
 
-            <div class="upload-box">
-              <h4>筛选表</h4>
-              <p>支持格式：.xlsx / .csv</p>
-              <p>字段：A=key / B=中文 / C=译文</p>
-              <input type="file" id="filterFile" accept=".xlsx,.xls,.csv" />
-              <div class="status" id="filterStatus">尚未导入文件</div>
-              <div class="template-tip">
-                如无筛选表，可先点击下方“下载筛选表模板”，填写后再导入。
+          <section class="tool-page active" id="gooseImportExportTool">
+            <section class="layout">
+              <aside class="panel">
+                <div class="panel-header">
+                  <h2 class="panel-title">导入与导出</h2>
+                </div>
+                <div class="panel-body">
+                  <div class="section">
+                    <h3 class="section-title">① 全量表对比</h3>
+                    <div class="field">
+                      <label for="newFullFile">导入全量表（需包含 Langs、Labels）</label>
+                      <input id="newFullFile" type="file" accept=".xlsx,.xls,.csv">
+                    </div>
+                    <div class="field">
+                      <label for="oldFullFile">导入旧全量表（需包含 Langs、Labels）</label>
+                      <input id="oldFullFile" type="file" accept=".xlsx,.xls,.csv">
+                    </div>
+                    <p class="hint">默认读取 A 列为 key，B 列为 zh，C 列为 jp。若第一行是表头，会自动跳过。</p>
+                  </div>
+
+                  <div class="section">
+                    <h3 class="section-title">② 策划更新范围表</h3>
+                    <div class="field">
+                      <label for="rangeFile">插入策划更新范围表（A1：策划更新范围，B2：key）</label>
+                      <input id="rangeFile" type="file" accept=".xlsx,.xls,.csv">
+                    </div>
+                    <div class="field">
+                      <label for="batchName">翻译批次（导出表 A 列一键填充）</label>
+                      <input id="batchName" type="text" value="0526全量上传">
+                    </div>
+                    <div class="field">
+                      <label for="langsFileName">Langs 上传表文件名</label>
+                      <input id="langsFileName" type="text" value="0526肥鹅Langs上传">
+                    </div>
+                    <div class="field">
+                      <label for="labelsFileName">Labels 上传表文件名</label>
+                      <input id="labelsFileName" type="text" value="0526肥鹅Labels上传">
+                    </div>
+                    <div class="btn-row">
+                      <button id="exportLangsBtn" class="btn primary">导出Langs上传表</button>
+                      <button id="exportLabelsBtn" class="btn primary">导出Labels上传表</button>
+                    </div>
+                    <p class="hint">上传表格式：翻译批次 / zh / jp / 策划更新范围。</p>
+                  </div>
+
+                  <div class="section">
+                    <h3 class="section-title">③ 全量翻译提醒</h3>
+                    <div class="notice">
+                      请前往网页：
+                      <a href="https://t7e.qcg.ink/translation-list" target="_blank" rel="noopener">https://t7e.qcg.ink/translation-list</a>
+                      进行全量翻译。
+                    </div>
+                  </div>
+
+                  <div class="section">
+                    <h3 class="section-title">④ 术语提取</h3>
+                    <div class="notice">
+                      请前往网页：
+                      <a href="https://t7e.qcg.ink/translation-list" target="_blank" rel="noopener">https://t7e.qcg.ink/translation-list</a>
+                      进行术语提取。
+                    </div>
+                  </div>
+
+                  <div class="section">
+                    <h3 class="section-title">旧代码合并预留区</h3>
+                    <div class="slot" id="legacyMergeSlot">之后可把旧功能模块挂载到此区域。</div>
+                  </div>
+
+                  <div id="status" class="status">等待导入文件。</div>
+                </div>
+              </aside>
+
+              <section class="panel">
+                <div class="panel-header">
+                  <h2 class="panel-title">查阅栏</h2>
+                  <div class="btn-row" aria-label="结果类型切换">
+                    <button class="btn subtab active" data-view-tab="keyChanges">① key变化</button>
+                    <button class="btn subtab" data-view-tab="zhChanges">② zh变化</button>
+                    <button class="btn subtab" data-view-tab="newItems">③ 新增内容</button>
+                    <button class="btn subtab" data-view-tab="duplicates">④ key重复</button>
+                  </div>
+                </div>
+                <div class="toolbar">
+                  <div class="summary">
+                    <span class="pill">当前 Sheet<strong id="currentSheetText">Langs</strong></span>
+                    <span class="pill">key变化<strong id="keyChangeCount">0</strong></span>
+                    <span class="pill">zh变化<strong id="zhChangeCount">0</strong></span>
+                    <span class="pill">新增<strong id="newItemCount">0</strong></span>
+                    <span class="pill">重复key<strong id="duplicateCount">0</strong></span>
+                  </div>
+                  <div class="toolbar-side" id="zhDiffFilterBox">
+                    <label for="zhDiffFilter">zh变化类型</label>
+                    <select id="zhDiffFilter">
+                      <option value="all">全部</option>
+                      <option value="invisible">仅空格/换行等</option>
+                      <option value="text">文字明显变化</option>
+                    </select>
+                  </div>
+                </div>
+                <div id="tableHost" class="table-wrap">
+                  <div class="empty">请先导入新旧全量表。</div>
+                </div>
+              </section>
+            </section>
+          </section>
+
+          <section class="panel tool-page" id="gooseTranslateTermTool">
+            <div class="panel-header">
+              <h2 class="panel-title">全量翻译与术语提取</h2>
+            </div>
+            <div class="panel-body">
+              <div class="notice">
+                请前往网页：
+                <a href="https://t7e.qcg.ink/translation-list" target="_blank" rel="noopener">https://t7e.qcg.ink/translation-list</a>
+                进行全量翻译。
+              </div>
+              <div class="notice">
+                请前往网页：
+                <a href="https://t7e.qcg.ink/translation-list" target="_blank" rel="noopener">https://t7e.qcg.ink/translation-list</a>
+                进行术语提取。
+              </div>
+              <p class="hint">术语库上传请切换到左侧“术语库上传”；Xbench 一致性修复请切换到“术语一致性”。</p>
+            </div>
+          </section>
+
+          <section class="panel tool-page" id="gooseTermConsistencyTool">
+            <div class="panel-header">
+              <h2 class="panel-title">术语库上传</h2>
+              <div class="btn-row">
+                <button class="btn" id="gooseTermTemplateBtn">下载术语库模板</button>
+                <button class="btn primary" id="gooseTermRunBtn">开始检查</button>
+                <button class="btn primary" id="gooseTermExportReviewBtn">导出审核结果</button>
+                <button class="btn primary" id="gooseTermExportLibBtn">导出同步后的全量术语库</button>
               </div>
             </div>
-          </div>
+            <div class="panel-body">
+              <div class="pc-grid">
+                <div class="pc-upload-box">
+                  <h4>全量术语表模板</h4>
+                  <p>文件名建议：《肥鹅健身房》全语言术语库术语表.xlsx</p>
+                  <input type="file" id="gooseTermLibFile" accept=".xlsx,.xls,.csv">
+                  <div class="status" id="gooseTermLibStatus">尚未导入文件</div>
+                </div>
+                <div class="pc-upload-box">
+                  <h4>已译文件术语</h4>
+                  <p>A列：zh-CN，B列：ja-JP</p>
+                  <input type="file" id="gooseTermTranslatedFile" accept=".xlsx,.xls,.csv">
+                  <div class="status" id="gooseTermTranslatedStatus">尚未导入文件</div>
+                </div>
+                <div class="pc-upload-box">
+                  <h4>未译文件术语</h4>
+                  <p>A列：zh-CN，B列：ja-JP</p>
+                  <input type="file" id="gooseTermUntranslatedFile" accept=".xlsx,.xls,.csv">
+                  <div class="status" id="gooseTermUntranslatedStatus">尚未导入文件</div>
+                </div>
+              </div>
 
-          <div class="batch-box">
-            <label for="uploadBatch">翻译上传批次：</label>
-            <input id="uploadBatch" type="text" />
-            <span style="color:#047857;">默认格式：当天 MMDD + 参数检查上传，例如 0526参数检查上传。</span>
-          </div>
-
-          <div class="actions">
-            <a class="action-link template" href="./filter_template.xlsx" download="筛选表模板.xlsx">
-              下载筛选表模板
-            </a>
-
-            <button class="action" onclick="runCheck()">开始参数检查</button>
-            <button class="action secondary" onclick="exportResults()">导出需要修改Excel</button>
-            <button class="action blue" onclick="exportUploadExcel()">导出本地化工具上传表</button>
-            <button class="action gray" onclick="resetAll()">清空数据</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>结果汇总</h3>
-          <div class="summary">
-            <div class="summary-item">
-              <div class="label">参数全量表总数</div>
-              <div class="value" id="countFull">0</div>
+              <div class="pc-result-tabs" style="margin-top:16px;">
+                <button class="btn subtab active" data-goose-term-tab="gooseTermChanged">变动术语审核</button>
+                <button class="btn subtab" data-goose-term-tab="gooseTermNew">新术语</button>
+                <button class="btn subtab" data-goose-term-tab="gooseTermDeleted">已人工删除复盘</button>
+                <button class="btn" id="gooseTermDeleteBadBtn">一键删除异常术语</button>
+              </div>
+              <div class="table-wrap pc-result-view active" id="gooseTermChanged">
+                <div class="empty">暂无数据。此处保留原术语库上传逻辑接入位置。</div>
+              </div>
+              <div class="table-wrap pc-result-view" id="gooseTermNew">
+                <div class="empty">暂无数据</div>
+              </div>
+              <div class="table-wrap pc-result-view" id="gooseTermDeleted">
+                <div class="empty">暂无数据</div>
+              </div>
             </div>
-            <div class="summary-item">
-              <div class="label">筛选表总数</div>
-              <div class="value" id="countFilter">0</div>
-            </div>
-            <div class="summary-item">
-              <div class="label">最终需修改文本</div>
-              <div class="value" id="countFinal">0</div>
-            </div>
-            <div class="summary-item">
-              <div class="label">单独提醒数量</div>
-              <div class="value" id="countAlert">0</div>
-            </div>
-          </div>
-        </div>
+          </section>
 
-        <div class="card">
-          <h3>单独提醒：key相同但中文不同</h3>
-          <div class="note">
-            以下内容表示：在筛选过程中发现 <strong>key 一致</strong>，但 <strong>中文原文不一致</strong>，因此不能直接删除，需要人工确认。
-            <br />
-            若点击 <strong>忽略</strong>：保持原翻译不动，不进入上传表；
-            若点击 <strong>已检查</strong>：表示已确认该项，可根据编辑后的译文进入上传表。
-          </div>
-          <div class="table-wrap" id="alertTableWrap">
-            <div class="placeholder" style="padding:16px;">暂无数据</div>
-          </div>
-        </div>
+          <section class="panel tool-page" id="gooseXbenchConsistencyTool">
+            <div class="panel-header">
+              <div>
+                <h2 class="panel-title">术语一致性</h2>
+                <p class="sub">
+                  Xbench 表可原封不动导入。工具会自动识别 Source / Target / Comments / Metadata，并按每个问题小标题分组。
+                  Langs / Labels 全量表分开导入，最终上传表也可分开导出。
+                </p>
+              </div>
+              <div class="btn-row">
+                <button class="btn primary" id="gcBuildBtn">生成离线编辑数据</button>
+                <button class="btn primary" id="gcExportOfflineBtn">导出离线编辑表</button>
+                <button class="btn" id="gcExportReminderBtn">导出全局提醒表</button>
+                <button class="btn" id="gcResetBtn">清空</button>
+              </div>
+            </div>
 
-        <div class="card">
-          <h3>最终需要修改的文本</h3>
-          <div class="note">
-            “修改后译文 jp”可直接编辑；勾选“进入上传表”后会进入本地化工具上传表。
-            点击“忽略”会自动取消勾选，该行不会进入上传表。
-          </div>
-          <div class="table-wrap" id="finalTableWrap">
-            <div class="placeholder" style="padding:16px;">暂无数据</div>
-          </div>
-        </div>
-      </section>
+            <div class="panel-body">
+              <div class="section">
+                <h3 class="section-title">① 文件导入</h3>
+                <div class="pc-grid">
+                  <div class="pc-upload-box">
+                    <h4>Xbench 结果表</h4>
+                    <p>直接导入 Exported QA Report 原始 Excel，不需要删除上方说明。</p>
+                    <p>支持任意问题小标题，例如 Inconsistency in Target、Key Term Mismatch、Numeric Mismatch 等。</p>
+                    <input type="file" id="gcXbenchFile" accept=".xlsx,.xls,.csv">
+                    <div class="status" id="gcXbenchStatus">尚未导入文件</div>
+                  </div>
 
-      <section id="todo2" class="tab">
-        <div class="card">
-          <h3>② 待补充</h3>
-          <div class="desc">
-            该模块暂未配置。你后续可以继续补充，例如：
-            <ul>
-              <li>术语统一检查</li>
-              <li>日语长度检查</li>
-              <li>禁则/标点检查</li>
-              <li>QA结果归档</li>
-              <li>最终导出与提单信息</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
+                  <div class="pc-upload-box">
+                    <h4>Langs 全量表</h4>
+                    <p>建议包含列：文本包批次、翻译批次、key、zh、jp。</p>
+                    <p>如无表头，默认按 A=文本包批次，B=翻译批次，C=key，D=zh，E=jp 读取。</p>
+                    <input type="file" id="gcLangsFile" accept=".xlsx,.xls,.csv">
+                    <div class="status" id="gcLangsStatus">尚未导入文件</div>
+                  </div>
+
+                  <div class="pc-upload-box">
+                    <h4>Labels 全量表</h4>
+                    <p>建议包含列：文本包批次、翻译批次、key、zh、jp。</p>
+                    <p>如无表头，默认按 A=文本包批次，B=翻译批次，C=key，D=zh，E=jp 读取。</p>
+                    <input type="file" id="gcLabelsFile" accept=".xlsx,.xls,.csv">
+                    <div class="status" id="gcLabelsStatus">尚未导入文件</div>
+                  </div>
+
+                  <div class="pc-upload-box">
+                    <h4>离线编辑回导</h4>
+                    <p>导入已编辑的离线编辑表后，可在下方手动导出上传表。</p>
+                    <input type="file" id="gcEditedFile" accept=".xlsx,.xls,.csv">
+                    <div class="status" id="gcEditedStatus">尚未导入文件</div>
+                  </div>
+                </div>
+
+                <div class="field" style="margin-top:14px; max-width:420px;">
+                  <label for="gcUploadBatch">默认上传批次</label>
+                  <input id="gcUploadBatch" type="text" value="0528一致性修复上传">
+                  <p class="hint">最终上传表固定四列：翻译批次 / key / zh / jp。</p>
+                </div>
+              </div>
+
+              <div class="section">
+                <h3 class="section-title">② 汇总</h3>
+                <div class="summary">
+                  <span class="pill">Xbench问题组<strong id="gcGroupCount">0</strong></span>
+                  <span class="pill">Xbench明细行<strong id="gcXbenchRowCount">0</strong></span>
+                  <span class="pill">Langs行数<strong id="gcLangsCount">0</strong></span>
+                  <span class="pill">Labels行数<strong id="gcLabelsCount">0</strong></span>
+                  <span class="pill">匹配到全量记录<strong id="gcMatchedCount">0</strong></span>
+                  <span class="pill">可编辑项<strong id="gcEditableCount">0</strong></span>
+                  <span class="pill">旧文本参考<strong id="gcReferenceCount">0</strong></span>
+                  <span class="pill">全局提醒<strong id="gcReminderCount">0</strong></span>
+                </div>
+
+                <div class="notice">
+                  逻辑：不会先过滤翻译批次为空的旧文本。系统会先用 Xbench 每个问题组里的 Source + Target 去匹配对应 Sheet 的全量表 zh + jp。
+                  翻译批次为空的记录作为旧文本参考；翻译批次非空的记录进入离线编辑表。
+                </div>
+              </div>
+
+              <div class="section">
+                <h3 class="section-title">③ 离线编辑表预览</h3>
+                <div class="table-wrap gc-table" id="gcEditPreview">
+                  <div class="empty">请先导入 Xbench、Langs / Labels 全量表，然后点击“生成离线编辑数据”。</div>
+                </div>
+              </div>
+
+              <div class="section">
+                <h3 class="section-title">④ 全局提醒预览</h3>
+                <div class="table-wrap gc-table" id="gcReminderPreview">
+                  <div class="empty">暂无提醒。</div>
+                </div>
+              </div>
+
+              <div class="section">
+                <h3 class="section-title">⑤ 上传表导出</h3>
+                <div class="btn-row">
+                  <button class="btn primary" id="gcExportUploadAllBtn">导出全部上传表</button>
+                  <button class="btn primary" id="gcExportUploadLangsBtn">导出 Langs 上传表</button>
+                  <button class="btn primary" id="gcExportUploadLabelsBtn">导出 Labels 上传表</button>
+                </div>
+                <p class="hint">
+                  上传表导出条件：是否上传=是、key 不为空、修复后jp 不为空、修复后jp 与当前jp不同、全量表中该 key 的翻译批次不为空。
+                </p>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section class="page" id="snailPage">
+          <header class="topbar">
+            <div>
+              <h1>最强蜗牛本地化</h1>
+              <p class="sub">当前已接入参数检查工具，其他工具入口已预留。</p>
+            </div>
+          </header>
+
+          <section class="panel tool-page active" id="paramCheckTool">
+            <div class="panel-header">
+              <div>
+                <h2 class="panel-title">《最强蜗牛》日语本地化参数检查</h2>
+                <p class="sub">导入参数全量表与筛选表，筛出最终需要修改的文本，并单独提醒 key 相同但中文不同的异常项。</p>
+              </div>
+              <div class="btn-row">
+                <button class="btn" id="pcTemplateBtn">下载筛选表模板</button>
+                <button class="btn primary" id="pcRunBtn">开始参数检查</button>
+              </div>
+            </div>
+
+            <div class="panel-body">
+              <div class="section">
+                <h3 class="section-title">流程说明</h3>
+                <div class="pc-desc">
+                  <p><strong>参数全量表</strong>：A=id，B=key，C=语言版本，D=中文原文，E=错误译文，F=错误类型，G=错误级别。</p>
+                  <p><strong>筛选表</strong>：A=key，B=中文，C=译文。若参数全量表中的 key 与中文都匹配筛选表，则该条可删除；若 key 相同但中文不同，会进入单独提醒。</p>
+                </div>
+              </div>
+
+              <div class="section">
+                <h3 class="section-title">文件导入</h3>
+                <div class="pc-grid">
+                  <div class="pc-upload-box">
+                    <h4>参数全量表</h4>
+                    <p>A=id / B=key / C=语言版本 / D=中文原文 / E=错误译文 / F=错误类型 / G=错误级别</p>
+                    <input type="file" id="pcFullFile" accept=".xlsx,.xls,.csv">
+                    <div class="status" id="pcFullStatus">尚未导入文件</div>
+                  </div>
+                  <div class="pc-upload-box">
+                    <h4>筛选表</h4>
+                    <p>A=key / B=中文 / C=译文</p>
+                    <input type="file" id="pcFilterFile" accept=".xlsx,.xls,.csv">
+                    <div class="status" id="pcFilterStatus">尚未导入文件</div>
+                  </div>
+                </div>
+
+                <div class="field" style="margin-top:14px; max-width:420px;">
+                  <label for="pcUploadBatch">翻译上传批次</label>
+                  <input id="pcUploadBatch" type="text">
+                  <p class="hint">默认格式：当天 MMDD + 参数检查上传，例如 0526参数检查上传。</p>
+                </div>
+
+                <div class="btn-row">
+                  <button class="btn primary" id="pcExportResultBtn">导出需要修改Excel</button>
+                  <button class="btn primary" id="pcExportUploadBtn">导出本地化工具上传表</button>
+                  <button class="btn primary" id="pcExportFilterBtn">导出新版筛选表</button>
+                  <button class="btn" id="pcResetBtn">清空参数检查数据</button>
+                </div>
+              </div>
+
+              <div class="section">
+                <h3 class="section-title">结果汇总</h3>
+                <div class="pc-summary">
+                  <div class="pc-summary-item">
+                    <div class="label">参数全量表总数</div>
+                    <div class="value" id="pcCountFull">0</div>
+                  </div>
+                  <div class="pc-summary-item">
+                    <div class="label">筛选表总数</div>
+                    <div class="value" id="pcCountFilter">0</div>
+                  </div>
+                  <div class="pc-summary-item">
+                    <div class="label">最终需修改文本</div>
+                    <div class="value" id="pcCountFinal">0</div>
+                  </div>
+                  <div class="pc-summary-item">
+                    <div class="label">单独提醒数量</div>
+                    <div class="value" id="pcCountAlert">0</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section">
+                <div class="pc-result-tabs">
+                  <button class="btn subtab active" data-pc-result-tab="pcAlertResult">单独提醒</button>
+                  <button class="btn subtab" data-pc-result-tab="pcFinalResult">最终需要修改</button>
+                </div>
+              </div>
+
+              <div class="section pc-result-view active" id="pcAlertResult">
+                <h3 class="section-title">单独提醒：key相同但中文不同</h3>
+                <div class="pc-note">以下内容表示筛选过程中发现 key 一致但中文原文不一致，因此不能直接删除，需要人工确认。</div>
+                <div class="table-wrap" id="pcAlertTableWrap">
+                  <div class="empty">暂无数据</div>
+                </div>
+              </div>
+
+              <div class="section pc-result-view" id="pcFinalResult">
+                <h3 class="section-title">最终需要修改的文本</h3>
+                <div class="pc-note">“修改后译文 jp”可直接编辑；勾选“进入上传表”后会进入本地化工具上传表。</div>
+                <div class="table-wrap" id="pcFinalTableWrap">
+                  <div class="empty">暂无数据</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel tool-page" id="snailTermPlaceholder">
+            <div class="panel-header">
+              <h2 class="panel-title">术语检查工具</h2>
+            </div>
+            <div class="panel-body">
+              <div class="slot">待补充：后续可接入术语统一、禁词、大小写或日语表达检查。</div>
+            </div>
+          </section>
+
+          <section class="panel tool-page" id="snailQaPlaceholder">
+            <div class="panel-header">
+              <h2 class="panel-title">QA检查工具</h2>
+            </div>
+            <div class="panel-body">
+              <div class="slot">待补充：后续可接入长度检查、标点检查、占位符检查和结果归档。</div>
+            </div>
+          </section>
+        </section>
+      </div>
+    </div>
+  </main>
 
   <script>
-    let fullData = [];
-    let filterData = [];
-    let finalData = [];
-    let alertData = [];
-    let uidCounter = 1;
+    const REQUIRED_SHEETS = ["Langs", "Labels"];
 
-    document.addEventListener('DOMContentLoaded', function() {
-      document.getElementById('uploadBatch').value = getTodayMMdd() + '参数检查上传';
-    });
-
-    document.getElementById('fullFile').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      readFile(file, (data) => {
-        fullData = normalizeFullData(data);
-        document.getElementById('fullStatus').textContent =
-          `已导入：${file.name}（${fullData.length} 条）`;
-        document.getElementById('countFull').textContent = fullData.length;
-      });
-    });
-
-    document.getElementById('filterFile').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      readFile(file, (data) => {
-        filterData = normalizeFilterData(data);
-        document.getElementById('filterStatus').textContent =
-          `已导入：${file.name}（${filterData.length} 条）`;
-        document.getElementById('countFilter').textContent = filterData.length;
-      });
-    });
-
-    function showTab(id, btn) {
-      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-
-      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-      if (btn) btn.classList.add('active');
+    function cleanCell(value) {
+      return String(value ?? "").trim();
     }
 
-    function jumpToParamCheck() {
-      const btns = document.querySelectorAll('.nav-btn');
-      showTab('paramCheck', btns[1]);
+    function normText(value) {
+      return cleanCell(value).replace(/\r\n/g, "\n").replace(/\r/g, "\n");
     }
 
-    function readFile(file, callback) {
-      const reader = new FileReader();
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
 
-      reader.onload = function(e) {
-        const data = e.target.result;
-        let workbook;
+    function ensureXlsxName(name) {
+      return /\.xlsx$/i.test(name) ? name : `${name}.xlsx`;
+    }
 
-        if (file.name.toLowerCase().endsWith('.csv')) {
-          workbook = XLSX.read(data, { type: 'string' });
-        } else {
-          workbook = XLSX.read(data, { type: 'binary' });
+    async function readWorkbook(file) {
+      if (!file) return null;
+      const data = await file.arrayBuffer();
+      return XLSX.read(data, { type: "array" });
+    }
+
+    async function readFirstSheetAoa(file) {
+      const workbook = await readWorkbook(file);
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      return XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "", blankrows: false });
+    }
+
+    function downloadAoa(rows, sheetName, fileName) {
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      XLSX.writeFile(wb, ensureXlsxName(fileName));
+    }
+
+    function setStatusByEl(el, message, type = "") {
+      if (!el) return;
+      el.textContent = message;
+      el.className = `status ${type}`.trim();
+    }
+
+    function createEmptyAnalysis() {
+      return REQUIRED_SHEETS.reduce((acc, sheet) => {
+        acc[sheet] = {
+          keyChanges: [],
+          zhChanges: [],
+          newItems: [],
+          duplicates: []
+        };
+        return acc;
+      }, {});
+    }
+
+    const state = {
+      activeSheet: "Langs",
+      activeView: "keyChanges",
+      zhDiffFilter: "all",
+      newBook: null,
+      oldBook: null,
+      rangeMap: new Map(),
+      analysis: createEmptyAnalysis()
+    };
+
+    const viewMeta = {
+      keyChanges: {
+        headers: ["变动位置", "原key", "变化后的key", "中文参照"],
+        empty: "暂无 key 变化。",
+        row: item => [item.position, item.oldKey, item.newKey, item.zh]
+      },
+      zhChanges: {
+        headers: ["key", "原中文（删除高亮）", "变化后的中文（新增高亮）", "变化说明"],
+        empty: "暂无 zh 变化。",
+        row: item => [item.key, item.oldZhMarked, item.newZhMarked, item.diffNote]
+      },
+      newItems: {
+        headers: ["新key", "新中文"],
+        empty: "暂无新增内容。",
+        row: item => [item.key, item.zh]
+      },
+      duplicates: {
+        headers: ["重复出现的key", "次数"],
+        empty: "暂无重复 key。",
+        row: item => [item.key, item.count]
+      }
+    };
+
+    const els = {
+      newFullFile: document.getElementById("newFullFile"),
+      oldFullFile: document.getElementById("oldFullFile"),
+      rangeFile: document.getElementById("rangeFile"),
+      status: document.getElementById("status"),
+      tableHost: document.getElementById("tableHost"),
+      currentSheetText: document.getElementById("currentSheetText"),
+      keyChangeCount: document.getElementById("keyChangeCount"),
+      zhChangeCount: document.getElementById("zhChangeCount"),
+      newItemCount: document.getElementById("newItemCount"),
+      duplicateCount: document.getElementById("duplicateCount"),
+      zhDiffFilter: document.getElementById("zhDiffFilter"),
+      zhDiffFilterBox: document.getElementById("zhDiffFilterBox"),
+      batchName: document.getElementById("batchName"),
+      langsFileName: document.getElementById("langsFileName"),
+      labelsFileName: document.getElementById("labelsFileName"),
+      exportLangsBtn: document.getElementById("exportLangsBtn"),
+      exportLabelsBtn: document.getElementById("exportLabelsBtn")
+    };
+
+    function setStatus(message, type = "") {
+      setStatusByEl(els.status, message, type);
+    }
+
+    function isHeaderRow(row) {
+      if (!row) return false;
+      const first = cleanCell(row[0]).toLowerCase();
+      const second = cleanCell(row[1]).toLowerCase();
+      return first === "key" || second === "zh" || second === "中文";
+    }
+
+    function getSheetRows(workbook, sheetName) {
+      const sheet = workbook && workbook.Sheets[sheetName];
+      if (!sheet) return [];
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+      const start = isHeaderRow(rows[0]) ? 1 : 0;
+
+      return rows.slice(start).map((row, index) => ({
+        rowIndex: start + index + 1,
+        key: cleanCell(row[0]),
+        zh: cleanCell(row[1]),
+        jp: cleanCell(row[2])
+      })).filter(row => row.key || row.zh || row.jp);
+    }
+
+    function mapByKey(rows) {
+      const map = new Map();
+      rows.forEach(row => {
+        if (row.key && !map.has(row.key)) map.set(row.key, row);
+      });
+      return map;
+    }
+
+    function findDuplicates(rows) {
+      const counts = new Map();
+      rows.forEach(row => {
+        if (!row.key) return;
+        counts.set(row.key, (counts.get(row.key) || 0) + 1);
+      });
+
+      return [...counts.entries()]
+        .filter(([, count]) => count > 1)
+        .map(([key, count]) => ({ key, count }))
+        .sort((a, b) => b.count - a.count || a.key.localeCompare(b.key));
+    }
+
+    function levenshtein(a, b) {
+      const dp = Array.from({ length: b.length + 1 }, (_, i) => i);
+      for (let i = 1; i <= a.length; i++) {
+        let prev = i - 1;
+        dp[0] = i;
+        for (let j = 1; j <= b.length; j++) {
+          const temp = dp[j];
+          dp[j] = Math.min(
+            dp[j] + 1,
+            dp[j - 1] + 1,
+            prev + (a[i - 1] === b[j - 1] ? 0 : 1)
+          );
+          prev = temp;
+        }
+      }
+      return dp[b.length];
+    }
+
+    function similarity(a, b) {
+      const longer = a.length >= b.length ? a : b;
+      const shorter = a.length < b.length ? a : b;
+      if (!longer.length) return 1;
+      const distance = levenshtein(longer, shorter);
+      return (longer.length - distance) / longer.length;
+    }
+
+    function scorePossibleKeyChange(oldRow, newRow) {
+      if (oldRow.zh && newRow.zh && oldRow.zh === newRow.zh) return 1;
+      if (oldRow.jp && newRow.jp && oldRow.jp === newRow.jp) return 0.85;
+      if (!oldRow.zh || !newRow.zh) return 0;
+      return similarity(oldRow.zh, newRow.zh);
+    }
+
+    function inferKeyChanges(oldRows, newRows, oldMap, newMap) {
+      const removed = oldRows.filter(row => row.key && !newMap.has(row.key));
+      const added = newRows.filter(row => row.key && !oldMap.has(row.key));
+      const usedAdded = new Set();
+      const changes = [];
+
+      removed.forEach(oldRow => {
+        const sameRow = newRows[oldRow.rowIndex - 2];
+
+        if (sameRow && sameRow.key && !oldMap.has(sameRow.key) && oldRow.zh && sameRow.zh === oldRow.zh) {
+          usedAdded.add(sameRow.key);
+          changes.push({
+            position: `第${oldRow.rowIndex}行`,
+            oldKey: oldRow.key,
+            newKey: sameRow.key,
+            zh: oldRow.zh
+          });
+          return;
         }
 
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
+        let best = null;
+        let bestScore = -1;
 
-        const rows = XLSX.utils.sheet_to_json(sheet, {
-          header: 1,
-          defval: '',
-          blankrows: false
+        added.forEach(newRow => {
+          if (usedAdded.has(newRow.key)) return;
+          const score = scorePossibleKeyChange(oldRow, newRow);
+          if (score > bestScore) {
+            best = newRow;
+            bestScore = score;
+          }
         });
 
-        callback(rows);
-      };
+        if (best && bestScore >= 0.55) {
+          usedAdded.add(best.key);
+          changes.push({
+            position: `旧第${oldRow.rowIndex}行 / 新第${best.rowIndex}行`,
+            oldKey: oldRow.key,
+            newKey: best.key,
+            zh: best.zh || oldRow.zh
+          });
+        }
+      });
 
-      if (file.name.toLowerCase().endsWith('.csv')) {
-        reader.readAsText(file, 'utf-8');
-      } else {
-        reader.readAsBinaryString(file);
+      return changes;
+    }
+
+    function renderDiffChar(char) {
+      if (char === " ") return '<span title="半角空格">·</span>';
+      if (char === "\u3000") return '<span title="全角空格">□</span>';
+      if (char === "\n") return '<span title="换行">↵<br></span>';
+      if (char === "\r") return '<span title="回车">⏎</span>';
+      if (char === "\t") return '<span title="制表符">⇥</span>';
+      return escapeHtml(char);
+    }
+
+    function isInvisibleDiffChar(char) {
+      return char === " " || char === "\u3000" || char === "\n" || char === "\r" || char === "\t";
+    }
+
+    function buildDiffNote(addedCount, removedCount, invisibleOnly) {
+      const parts = [];
+      if (addedCount) parts.push(`新增 ${addedCount} 个字符`);
+      if (removedCount) parts.push(`删除 ${removedCount} 个字符`);
+      if (!parts.length) return '<span class="diff-note">内容存在差异</span>';
+      const invisibleText = invisibleOnly ? "；仅空格/换行/制表符等不可见字符变化" : "";
+      return `<span class="diff-note">${parts.join("，")}${invisibleText}</span>`;
+    }
+
+    function markChangedText(oldText, newText) {
+      const oldChars = [...String(oldText ?? "")];
+      const newChars = [...String(newText ?? "")];
+      const dp = Array.from({ length: oldChars.length + 1 }, () => Array(newChars.length + 1).fill(0));
+
+      for (let i = oldChars.length - 1; i >= 0; i--) {
+        for (let j = newChars.length - 1; j >= 0; j--) {
+          dp[i][j] = oldChars[i] === newChars[j]
+            ? dp[i + 1][j + 1] + 1
+            : Math.max(dp[i + 1][j], dp[i][j + 1]);
+        }
+      }
+
+      let i = 0;
+      let j = 0;
+      let oldHtml = "";
+      let newHtml = "";
+      let addedCount = 0;
+      let removedCount = 0;
+      let invisibleOnly = true;
+
+      while (i < oldChars.length || j < newChars.length) {
+        if (i < oldChars.length && j < newChars.length && oldChars[i] === newChars[j]) {
+          const visible = renderDiffChar(oldChars[i]);
+          oldHtml += visible;
+          newHtml += visible;
+          i++;
+          j++;
+        } else if (j < newChars.length && (i === oldChars.length || dp[i][j + 1] >= dp[i + 1][j])) {
+          newHtml += `<mark class="diff-add">${renderDiffChar(newChars[j])}</mark>`;
+          if (!isInvisibleDiffChar(newChars[j])) invisibleOnly = false;
+          addedCount++;
+          j++;
+        } else if (i < oldChars.length) {
+          oldHtml += `<mark class="diff-remove">${renderDiffChar(oldChars[i])}</mark>`;
+          if (!isInvisibleDiffChar(oldChars[i])) invisibleOnly = false;
+          removedCount++;
+          i++;
+        }
+      }
+
+      return {
+        oldHtml,
+        newHtml,
+        note: buildDiffNote(addedCount, removedCount, invisibleOnly),
+        invisibleOnly
+      };
+    }
+
+    function analyze() {
+      const next = createEmptyAnalysis();
+
+      if (!state.newBook || !state.oldBook) {
+        state.analysis = next;
+        render();
+        return;
+      }
+
+      const missing = [];
+      REQUIRED_SHEETS.forEach(sheet => {
+        if (!state.newBook.Sheets[sheet]) missing.push(`新全量表缺少 ${sheet}`);
+        if (!state.oldBook.Sheets[sheet]) missing.push(`旧全量表缺少 ${sheet}`);
+      });
+
+      if (missing.length) setStatus(missing.join("；"), "err");
+
+      REQUIRED_SHEETS.forEach(sheet => {
+        const newRows = getSheetRows(state.newBook, sheet);
+        const oldRows = getSheetRows(state.oldBook, sheet);
+        const newMap = mapByKey(newRows);
+        const oldMap = mapByKey(oldRows);
+
+        next[sheet].duplicates = findDuplicates(newRows);
+
+        next[sheet].newItems = newRows
+          .filter(row => row.key && !oldMap.has(row.key))
+          .map(row => ({ key: row.key, zh: row.zh }));
+
+        next[sheet].zhChanges = newRows
+          .filter(row => row.key && oldMap.has(row.key) && row.zh !== oldMap.get(row.key).zh)
+          .map(row => {
+            const oldZh = oldMap.get(row.key).zh;
+            const diff = markChangedText(oldZh, row.zh);
+            return {
+              key: row.key,
+              oldZh,
+              newZh: row.zh,
+              oldZhMarked: diff.oldHtml,
+              newZhMarked: diff.newHtml,
+              diffNote: diff.note,
+              diffType: diff.invisibleOnly ? "invisible" : "text"
+            };
+          });
+
+        next[sheet].keyChanges = inferKeyChanges(oldRows, newRows, oldMap, newMap);
+      });
+
+      state.analysis = next;
+      render();
+    }
+
+    async function handleWorkbookInput(kind, file) {
+      if (!file) return;
+
+      try {
+        const workbook = await readWorkbook(file);
+        state[kind] = workbook;
+        setStatus(`${file.name} 已导入。`, "ok");
+        analyze();
+      } catch (error) {
+        setStatus(`读取失败：${error.message}`, "err");
       }
     }
 
-    function normalizeFullData(data) {
-      const rows = data.slice(1).map(row => {
-        return {
-          id: row[0],
-          key: String(row[1] ?? '').trim(),
-          lang: String(row[2] ?? '').trim(),
-          zh: String(row[3] ?? '').trim(),
-          wrongTrans: row[4],
-          errorType: String(row[5] ?? '').trim(),
-          errorLevel: normalizeErrorLevel(row[6])
-        };
-      }).filter(row => row.key || row.zh || row.wrongTrans);
+    async function handleRangeInput(file) {
+      if (!file) return;
 
-      applyErrorLevelByKey(rows);
+      try {
+        const workbook = await readWorkbook(file);
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: "" });
+        const rangeMap = new Map();
 
-      return sortByErrorLevel(rows);
+        rows.forEach((row, index) => {
+          if (index === 0) return;
+          const range = cleanCell(row[0]);
+          const key = cleanCell(row[1]);
+          if (key) rangeMap.set(key, range);
+        });
+
+        state.rangeMap = rangeMap;
+        setStatus(`策划更新范围表已导入，匹配 key 数：${rangeMap.size}`, "ok");
+      } catch (error) {
+        setStatus(`策划更新范围表读取失败：${error.message}`, "err");
+      }
     }
 
-    function normalizeFilterData(data) {
-      return data.slice(1).map(row => ({
-        key: String(row[0] ?? '').trim(),
-        zh: String(row[1] ?? '').trim(),
-        trans: row[2]
-      })).filter(row => row.key || row.zh || row.trans);
+    function exportUploadSheet(sheetName) {
+      if (!state.newBook) {
+        setStatus("请先导入全量表。", "err");
+        return;
+      }
+
+      if (!state.newBook.Sheets[sheetName]) {
+        setStatus(`全量表缺少 ${sheetName}。`, "err");
+        return;
+      }
+
+      const batch = cleanCell(els.batchName.value);
+      const rows = getSheetRows(state.newBook, sheetName);
+      const uploadRows = [["翻译批次", "zh", "jp", "策划更新范围"]];
+
+      rows.forEach(row => {
+        uploadRows.push([
+          batch,
+          row.zh,
+          row.jp,
+          state.rangeMap.get(row.key) || ""
+        ]);
+      });
+
+      const baseName = sheetName === "Langs" ? els.langsFileName.value : els.labelsFileName.value;
+      const fileName = ensureXlsxName(cleanCell(baseName) || `${sheetName}上传表`);
+      downloadAoa(uploadRows, sheetName, fileName);
+      setStatus(`${fileName} 已导出。`, "ok");
     }
 
-    function normalizeErrorLevel(value) {
-      const text = String(value ?? '').trim();
+    function getActiveViewRows(data) {
+      const rows = data[state.activeView];
+      if (state.activeView !== "zhChanges" || state.zhDiffFilter === "all") return rows;
+      return rows.filter(row => row.diffType === state.zhDiffFilter);
+    }
 
-      if (!text) return '';
+    function renderTable(rows, meta) {
+      if (!rows.length) {
+        els.tableHost.innerHTML = `<div class="empty">${meta.empty}</div>`;
+        return;
+      }
 
-      if (text.includes('阻断')) return '阻断';
-      if (text.includes('致命')) return '致命';
-      if (text.includes('提醒')) return '提醒';
-      if (text.includes('警告')) return '警告';
+      const thead = meta.headers.map(header => `<th>${escapeHtml(header)}</th>`).join("");
+      const tbody = rows.map(item => {
+        const cells = meta.row(item).map(cell => `<td>${cell ?? ""}</td>`).join("");
+        return `<tr>${cells}</tr>`;
+      }).join("");
+
+      els.tableHost.innerHTML = `<table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>`;
+    }
+
+    function render() {
+      const data = state.analysis[state.activeSheet];
+
+      els.currentSheetText.textContent = state.activeSheet;
+      els.keyChangeCount.textContent = data.keyChanges.length;
+      els.zhChangeCount.textContent = data.zhChanges.length;
+      els.newItemCount.textContent = data.newItems.length;
+      els.duplicateCount.textContent = data.duplicates.length;
+      els.zhDiffFilterBox.style.display = state.activeView === "zhChanges" ? "flex" : "none";
+
+      document.querySelectorAll("[data-sheet-tab]").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.sheetTab === state.activeSheet);
+      });
+
+      document.querySelectorAll("[data-view-tab]").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.viewTab === state.activeView);
+      });
+
+      renderTable(getActiveViewRows(data), viewMeta[state.activeView]);
+    }
+
+    els.newFullFile.addEventListener("change", event => handleWorkbookInput("newBook", event.target.files[0]));
+    els.oldFullFile.addEventListener("change", event => handleWorkbookInput("oldBook", event.target.files[0]));
+    els.rangeFile.addEventListener("change", event => handleRangeInput(event.target.files[0]));
+    els.exportLangsBtn.addEventListener("click", () => exportUploadSheet("Langs"));
+    els.exportLabelsBtn.addEventListener("click", () => exportUploadSheet("Labels"));
+
+    els.zhDiffFilter.addEventListener("change", event => {
+      state.zhDiffFilter = event.target.value;
+      render();
+    });
+
+    document.querySelectorAll("[data-sheet-tab]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.activeSheet = btn.dataset.sheetTab;
+        render();
+      });
+    });
+
+    document.querySelectorAll("[data-view-tab]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.activeView = btn.dataset.viewTab;
+        render();
+      });
+    });
+
+    function switchPage(pageId, toolId = "") {
+      document.querySelectorAll(".page").forEach(page => {
+        page.classList.toggle("active", page.id === pageId);
+      });
+
+      document.querySelectorAll(".nav-main").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.pageTarget === pageId);
+      });
+
+      document.querySelectorAll(".nav-group").forEach(group => {
+        const hasTarget = Boolean(group.querySelector(`[data-page-target="${pageId}"]`));
+        group.classList.toggle("open", hasTarget);
+      });
+
+      const defaultTools = {
+        goosePage: "gooseImportExportTool",
+        snailPage: "paramCheckTool"
+      };
+
+      const selectedTool = toolId || defaultTools[pageId] || "";
+
+      document.querySelectorAll(".nav-sub").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.toolTarget === selectedTool);
+      });
+
+      document.querySelectorAll(`#${pageId} .tool-page`).forEach(tool => {
+        tool.classList.toggle("active", tool.id === selectedTool);
+      });
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    document.querySelectorAll(".nav-main").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const pageId = btn.dataset.pageTarget;
+        const defaultTool = pageId === "snailPage" ? "paramCheckTool" : "gooseImportExportTool";
+        switchPage(pageId, defaultTool);
+      });
+    });
+
+    document.querySelectorAll(".nav-sub").forEach(btn => {
+      btn.addEventListener("click", () => {
+        switchPage(btn.dataset.pageTarget, btn.dataset.toolTarget);
+      });
+    });
+
+    const sideNav = document.getElementById("sideNav");
+    const navCollapseBtn = document.getElementById("navCollapseBtn");
+    const workspaceEl = document.querySelector(".workspace");
+
+    function applyNavCollapsed(collapsed) {
+      if (!sideNav || !navCollapseBtn || !workspaceEl) return;
+      sideNav.classList.toggle("collapsed", collapsed);
+      workspaceEl.classList.toggle("nav-collapsed", collapsed);
+      navCollapseBtn.textContent = collapsed ? "》" : "《";
+      navCollapseBtn.title = collapsed ? "展开左侧导航" : "隐藏左侧导航";
+      localStorage.setItem("l10n_nav_collapsed", collapsed ? "1" : "0");
+    }
+
+    if (navCollapseBtn) {
+      applyNavCollapsed(localStorage.getItem("l10n_nav_collapsed") === "1");
+      navCollapseBtn.addEventListener("click", () => {
+        applyNavCollapsed(!sideNav.classList.contains("collapsed"));
+      });
+    }
+
+    document.querySelectorAll("[data-goose-term-tab]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const targetId = btn.dataset.gooseTermTab;
+        document.querySelectorAll("[data-goose-term-tab]").forEach(tab => tab.classList.toggle("active", tab === btn));
+
+        ["gooseTermChanged", "gooseTermNew", "gooseTermDeleted"].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.classList.toggle("active", id === targetId);
+        });
+      });
+    });
+
+    document.querySelectorAll("[data-pc-result-tab]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const targetId = btn.dataset.pcResultTab;
+        document.querySelectorAll("[data-pc-result-tab]").forEach(tab => tab.classList.toggle("active", tab === btn));
+        document.querySelectorAll("#paramCheckTool .pc-result-view").forEach(view => {
+          view.classList.toggle("active", view.id === targetId);
+        });
+      });
+    });
+
+    const pcState = {
+      fullData: [],
+      filterData: [],
+      finalData: [],
+      alertData: [],
+      uidCounter: 1
+    };
+
+    const pcEls = {
+      fullFile: document.getElementById("pcFullFile"),
+      filterFile: document.getElementById("pcFilterFile"),
+      fullStatus: document.getElementById("pcFullStatus"),
+      filterStatus: document.getElementById("pcFilterStatus"),
+      uploadBatch: document.getElementById("pcUploadBatch"),
+      countFull: document.getElementById("pcCountFull"),
+      countFilter: document.getElementById("pcCountFilter"),
+      countFinal: document.getElementById("pcCountFinal"),
+      countAlert: document.getElementById("pcCountAlert"),
+      alertTableWrap: document.getElementById("pcAlertTableWrap"),
+      finalTableWrap: document.getElementById("pcFinalTableWrap")
+    };
+
+    function pcGetTodayMMdd() {
+      const now = new Date();
+      return String(now.getMonth() + 1).padStart(2, "0") + String(now.getDate()).padStart(2, "0");
+    }
+
+    function pcGetNormalizedBatchName() {
+      const input = cleanCell(pcEls.uploadBatch.value);
+      const today = pcGetTodayMMdd();
+      if (!input) return today + "参数检查上传";
+      if (/^\d{4}/.test(input)) return input.replace(/^\d{4}/, today);
+      return today + input;
+    }
+
+    function pcNormalizeErrorLevel(value) {
+      const text = cleanCell(value);
+      if (!text) return "";
+      if (text.includes("阻断")) return "阻断";
+      if (text.includes("致命")) return "致命";
+      if (text.includes("提醒")) return "提醒";
+      if (text.includes("警告")) return "警告";
 
       const lower = text.toLowerCase();
-
-      if (lower.includes('block')) return '阻断';
-      if (lower.includes('fatal')) return '致命';
-      if (lower.includes('notice')) return '提醒';
-      if (lower.includes('warn')) return '警告';
-
+      if (lower.includes("block")) return "阻断";
+      if (lower.includes("fatal")) return "致命";
+      if (lower.includes("notice")) return "提醒";
+      if (lower.includes("warn")) return "警告";
       return text;
     }
 
-    function getErrorLevelPriority(errorLevel) {
-      const type = normalizeErrorLevel(errorLevel);
-
-      const priorityMap = {
-        '阻断': 4,
-        '致命': 3,
-        '提醒': 2,
-        '警告': 1
-      };
-
-      return priorityMap[type] || 0;
+    function pcGetErrorLevelPriority(errorLevel) {
+      return {
+        "阻断": 4,
+        "致命": 3,
+        "提醒": 2,
+        "警告": 1
+      }[pcNormalizeErrorLevel(errorLevel)] || 0;
     }
 
-    function getHigherErrorLevel(a, b) {
-      return getErrorLevelPriority(a) >= getErrorLevelPriority(b)
-        ? normalizeErrorLevel(a)
-        : normalizeErrorLevel(b);
-    }
-
-    function applyErrorLevelByKey(rows) {
-      const keyLevelMap = new Map();
-
-      rows.forEach(row => {
-        if (!row.key) return;
-
-        const current = keyLevelMap.get(row.key) || '';
-        const higher = getHigherErrorLevel(current, row.errorLevel);
-
-        keyLevelMap.set(row.key, higher);
-      });
-
-      rows.forEach(row => {
-        if (!row.key) return;
-
-        const levelByKey = keyLevelMap.get(row.key);
-
-        if (!row.errorLevel || getErrorLevelPriority(row.errorLevel) < getErrorLevelPriority(levelByKey)) {
-          row.errorLevel = levelByKey || row.errorLevel || '';
-        }
-      });
-    }
-
-    function sortByErrorLevel(data) {
+    function pcSortByErrorLevel(data) {
       return data.sort((a, b) => {
-        const priorityDiff = getErrorLevelPriority(b.errorLevel) - getErrorLevelPriority(a.errorLevel);
-        if (priorityDiff !== 0) return priorityDiff;
-
-        const keyA = String(a.key ?? '');
-        const keyB = String(b.key ?? '');
-        const keyCompare = keyA.localeCompare(keyB, 'zh-CN');
-        if (keyCompare !== 0) return keyCompare;
-
-        const idA = String(a.id ?? '');
-        const idB = String(b.id ?? '');
-        return idA.localeCompare(idB, 'zh-CN');
+        const p = pcGetErrorLevelPriority(b.errorLevel) - pcGetErrorLevelPriority(a.errorLevel);
+        if (p !== 0) return p;
+        return String(a.key ?? "").localeCompare(String(b.key ?? ""), "zh-CN");
       });
     }
 
-    function runCheck() {
-      if (!fullData.length) {
-        alert('请先导入参数全量表。');
+    function pcNormalizeFullData(data) {
+      return pcSortByErrorLevel(data.slice(1).map(row => ({
+        id: row[0],
+        key: cleanCell(row[1]),
+        lang: cleanCell(row[2]),
+        zh: cleanCell(row[3]),
+        wrongTrans: cleanCell(row[4]),
+        errorType: cleanCell(row[5]),
+        errorLevel: pcNormalizeErrorLevel(row[6])
+      })).filter(row => row.key || row.zh || row.wrongTrans));
+    }
+
+    function pcNormalizeFilterData(data) {
+      return data.slice(1).map(row => ({
+        key: cleanCell(row[0]),
+        zh: cleanCell(row[1]),
+        trans: cleanCell(row[2])
+      })).filter(row => row.key || row.zh || row.trans);
+    }
+
+    function pcRenderErrorLevelTag(errorLevel) {
+      const type = pcNormalizeErrorLevel(errorLevel);
+      if (type === "阻断") return '<span class="pc-level-tag block">阻断</span>';
+      if (type === "致命") return '<span class="pc-level-tag fatal">致命</span>';
+      if (type === "提醒") return '<span class="pc-level-tag notice">提醒</span>';
+      if (type === "警告") return '<span class="pc-level-tag warn">警告</span>';
+      return '<span class="pc-level-tag empty">空</span>';
+    }
+
+    function pcRenderMultiLine(value) {
+      return `<span class="pc-multi-line">${escapeHtml(value)}</span>`;
+    }
+
+    function pcDedupeRows(rows) {
+      const map = new Map();
+
+      rows.forEach(row => {
+        const key = `${row.key}||${row.zh}||${row.errorType}||${row.errorLevel}`;
+        if (!map.has(key)) {
+          map.set(key, { ...row, idList: [], langList: [] });
+        }
+
+        const target = map.get(key);
+        if (row.id && !target.idList.includes(row.id)) target.idList.push(row.id);
+        if (row.lang && !target.langList.includes(row.lang)) target.langList.push(row.lang);
+      });
+
+      return [...map.values()].map(row => ({
+        ...row,
+        id: row.idList.join("\n"),
+        lang: row.langList.join("\n"),
+        idList: undefined,
+        langList: undefined
+      }));
+    }
+
+    function pcRunCheck() {
+      if (!pcState.fullData.length) {
+        alert("请先导入参数全量表。");
         return;
       }
 
-      if (!filterData.length) {
-        alert('请先导入筛选表。');
+      if (!pcState.filterData.length) {
+        alert("请先导入筛选表。");
         return;
       }
 
-      uidCounter = 1;
-      finalData = [];
-      alertData = [];
-
-      const rawFinalData = [];
-      const rawAlertData = [];
+      pcState.uidCounter = 1;
 
       const filterMap = new Map();
-
-      for (const row of filterData) {
-        if (!filterMap.has(row.key)) {
-          filterMap.set(row.key, []);
-        }
+      pcState.filterData.forEach(row => {
+        if (!filterMap.has(row.key)) filterMap.set(row.key, []);
         filterMap.get(row.key).push(row);
-      }
+      });
 
-      for (const row of fullData) {
+      const rawFinal = [];
+      const rawAlert = [];
+
+      pcState.fullData.forEach(row => {
         const matchedList = filterMap.get(row.key);
 
-        if (!matchedList || matchedList.length === 0) {
-          rawFinalData.push(createRawFinalRow(row, false));
-          continue;
-        }
-
-        let shouldDelete = false;
-        let hasZhMismatch = false;
-        let mismatchFilterZhList = [];
-
-        for (const f of matchedList) {
-          if (row.key === f.key) {
-            if (row.zh === f.zh) {
-              shouldDelete = true;
-              break;
-            } else {
-              hasZhMismatch = true;
-              mismatchFilterZhList.push(f.zh);
-            }
-          }
-        }
-
-        if (shouldDelete) {
-          continue;
-        }
-
-        rawFinalData.push(createRawFinalRow(row, hasZhMismatch));
-
-        if (hasZhMismatch) {
-          rawAlertData.push({
-            groupKey: getGroupKey(row),
-            id: row.id,
-            key: row.key,
-            lang: row.lang,
-            fullZh: row.zh,
-            filterZh: mismatchFilterZhList.join('\n'),
-            wrongTrans: row.wrongTrans,
+        if (!matchedList || !matchedList.length) {
+          rawFinal.push({
+            ...row,
+            uid: "pc_" + pcState.uidCounter++,
             editJp: row.wrongTrans,
-            errorType: row.errorType,
-            errorLevel: row.errorLevel,
-            status: 'pending'
-          });
-        }
-      }
-
-      finalData = dedupeFinalRows(rawFinalData);
-      alertData = dedupeAlertRows(rawAlertData, finalData);
-
-      finalData = sortByErrorLevel(finalData);
-      alertData = sortByErrorLevel(alertData);
-
-      document.getElementById('countFinal').textContent = finalData.length;
-      document.getElementById('countAlert').textContent = alertData.length;
-
-      renderAlertTable();
-      renderFinalTable();
-
-      alert('参数检查完成。');
-    }
-
-    function createRawFinalRow(row, isAlert) {
-      return {
-        id: row.id,
-        key: row.key,
-        lang: row.lang,
-        zh: row.zh,
-        wrongTrans: row.wrongTrans,
-        editJp: row.wrongTrans,
-        errorType: row.errorType,
-        errorLevel: row.errorLevel,
-        includeUpload: true,
-        ignored: false,
-        isAlert: isAlert,
-        alertStatus: isAlert ? 'pending' : '',
-        groupKey: getGroupKey(row)
-      };
-    }
-
-    function getGroupKey(row) {
-      return `${row.key}||${row.zh}`;
-    }
-
-    function dedupeFinalRows(rows) {
-      const map = new Map();
-
-      rows.forEach(row => {
-        const groupKey = row.groupKey;
-
-        if (!map.has(groupKey)) {
-          map.set(groupKey, {
-            uid: 'row_' + uidCounter++,
-            idList: [],
-            langList: [],
-            errorTypeList: [],
-            id: '',
-            key: row.key,
-            lang: '',
-            zh: row.zh,
-            wrongTrans: row.wrongTrans,
-            editJp: row.editJp,
-            errorType: row.errorType,
-            errorLevel: row.errorLevel,
             includeUpload: true,
             ignored: false,
-            isAlert: row.isAlert,
-            alertStatus: row.isAlert ? 'pending' : '',
-            groupKey: groupKey
+            isAlert: false
           });
+          return;
         }
 
-        const target = map.get(groupKey);
+        const sameZh = matchedList.some(item => item.zh === row.zh);
+        if (sameZh) return;
 
-        pushUnique(target.idList, row.id);
-        pushUnique(target.langList, row.lang);
-        pushUnique(target.errorTypeList, row.errorType);
+        rawFinal.push({
+          ...row,
+          uid: "pc_" + pcState.uidCounter++,
+          editJp: row.wrongTrans,
+          includeUpload: true,
+          ignored: false,
+          isAlert: true
+        });
 
-        if (!target.wrongTrans && row.wrongTrans) {
-          target.wrongTrans = row.wrongTrans;
-        }
-
-        if (!target.editJp && row.editJp) {
-          target.editJp = row.editJp;
-        }
-
-        target.errorLevel = getHigherErrorLevel(target.errorLevel, row.errorLevel);
-
-        if (row.isAlert) {
-          target.isAlert = true;
-          if (target.alertStatus !== 'ignored' && target.alertStatus !== 'checked') {
-            target.alertStatus = 'pending';
-          }
-        }
+        rawAlert.push({
+          ...row,
+          sourceUid: "alert_" + pcState.uidCounter++,
+          filterZh: matchedList.map(item => item.zh).filter(Boolean).join("\n"),
+          editJp: row.wrongTrans,
+          status: "pending"
+        });
       });
 
-      return Array.from(map.values()).map(row => {
-        row.id = row.idList.join('\n');
-        row.lang = row.langList.join('\n');
-        row.errorType = row.errorTypeList.join('\n');
+      pcState.finalData = pcSortByErrorLevel(pcDedupeRows(rawFinal)).map((row, idx) => ({
+        ...row,
+        uid: row.uid || "pc_f_" + idx
+      }));
 
-        delete row.idList;
-        delete row.langList;
-        delete row.errorTypeList;
+      pcState.alertData = pcSortByErrorLevel(pcDedupeRows(rawAlert)).map((row, idx) => ({
+        ...row,
+        sourceUid: row.sourceUid || "pc_a_" + idx
+      }));
 
-        return row;
-      });
+      pcEls.countFinal.textContent = pcState.finalData.length;
+      pcEls.countAlert.textContent = pcState.alertData.length;
+
+      pcRenderAlertTable();
+      pcRenderFinalTable();
+      alert("参数检查完成。");
     }
 
-    function dedupeAlertRows(rows, finalRows) {
-      const finalMap = new Map();
-      finalRows.forEach(row => {
-        finalMap.set(row.groupKey, row);
-      });
-
-      const map = new Map();
-
-      rows.forEach(row => {
-        const groupKey = row.groupKey;
-
-        if (!map.has(groupKey)) {
-          const finalRow = finalMap.get(groupKey);
-
-          map.set(groupKey, {
-            sourceUid: finalRow ? finalRow.uid : 'alert_' + uidCounter++,
-            idList: [],
-            langList: [],
-            filterZhList: [],
-            errorTypeList: [],
-            id: '',
-            key: row.key,
-            lang: '',
-            fullZh: row.fullZh,
-            filterZh: '',
-            wrongTrans: row.wrongTrans,
-            editJp: row.editJp,
-            errorType: row.errorType,
-            errorLevel: row.errorLevel,
-            status: 'pending',
-            groupKey: groupKey
-          });
-        }
-
-        const target = map.get(groupKey);
-
-        pushUnique(target.idList, row.id);
-        pushUnique(target.langList, row.lang);
-        pushUnique(target.filterZhList, row.filterZh);
-        pushUnique(target.errorTypeList, row.errorType);
-
-        if (!target.wrongTrans && row.wrongTrans) {
-          target.wrongTrans = row.wrongTrans;
-        }
-
-        if (!target.editJp && row.editJp) {
-          target.editJp = row.editJp;
-        }
-
-        target.errorLevel = getHigherErrorLevel(target.errorLevel, row.errorLevel);
-      });
-
-      return Array.from(map.values()).map(row => {
-        row.id = row.idList.join('\n');
-        row.lang = row.langList.join('\n');
-        row.filterZh = row.filterZhList.join('\n');
-        row.errorType = row.errorTypeList.join('\n');
-
-        delete row.idList;
-        delete row.langList;
-        delete row.filterZhList;
-        delete row.errorTypeList;
-
-        return row;
-      });
-    }
-
-    function pushUnique(arr, value) {
-      const text = String(value ?? '').trim();
-      if (!text) return;
-      if (!arr.includes(text)) {
-        arr.push(text);
-      }
-    }
-
-    function renderAlertTable() {
-      const container = document.getElementById('alertTableWrap');
-
-      if (!alertData.length) {
-        container.innerHTML = '<div class="placeholder" style="padding:16px;">暂无数据</div>';
+    function pcRenderAlertTable() {
+      if (!pcState.alertData.length) {
+        pcEls.alertTableWrap.innerHTML = '<div class="empty">暂无数据</div>';
         return;
       }
 
-      let html = `
+      const rows = pcState.alertData.map(row => `
+        <tr>
+          <td><span class="pc-tag pending">待检查</span></td>
+          <td>${pcRenderErrorLevelTag(row.errorLevel)}</td>
+          <td>${escapeHtml(row.errorType)}</td>
+          <td>${escapeHtml(row.key)}</td>
+          <td>${pcRenderMultiLine(row.lang)}</td>
+          <td>${escapeHtml(row.zh)}</td>
+          <td>${pcRenderMultiLine(row.filterZh)}</td>
+          <td><textarea class="pc-edit-jp" id="pc_alert_jp_${row.sourceUid}">${escapeHtml(row.editJp)}</textarea></td>
+        </tr>
+      `).join("");
+
+      pcEls.alertTableWrap.innerHTML = `
         <table>
           <thead>
             <tr>
               <th>状态</th>
-              <th>操作</th>
               <th>错误级别</th>
               <th>错误类型</th>
-              <th>id</th>
               <th>key</th>
               <th>语言版本</th>
               <th>参数全量表-中文原文</th>
@@ -1057,404 +1952,1145 @@
               <th>修改后译文 jp</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody>${rows}</tbody>
+        </table>
       `;
-
-      alertData.forEach(row => {
-        html += `
-          <tr>
-            <td>${renderStatusTag(row.status)}</td>
-            <td>
-              <button class="small-btn ignore" onclick="ignoreAlertRow('${row.sourceUid}')">忽略</button>
-              <button class="small-btn checked" onclick="checkAlertRow('${row.sourceUid}')">已检查</button>
-            </td>
-            <td>${renderErrorLevelTag(row.errorLevel)}</td>
-            <td>${renderMultiLine(row.errorType)}</td>
-            <td>${renderMultiLine(row.id)}</td>
-            <td>${escapeHtml(row.key)}</td>
-            <td>${renderMultiLine(row.lang)}</td>
-            <td>${escapeHtml(row.fullZh)}</td>
-            <td>${renderMultiLine(row.filterZh)}</td>
-            <td>
-              <textarea class="edit-jp" id="alert_jp_${row.sourceUid}">${escapeHtml(row.editJp)}</textarea>
-            </td>
-          </tr>
-        `;
-      });
-
-      html += '</tbody></table>';
-      container.innerHTML = html;
     }
 
-    function renderFinalTable() {
-      const container = document.getElementById('finalTableWrap');
-
-      if (!finalData.length) {
-        container.innerHTML = '<div class="placeholder" style="padding:16px;">暂无数据</div>';
+    function pcRenderFinalTable() {
+      if (!pcState.finalData.length) {
+        pcEls.finalTableWrap.innerHTML = '<div class="empty">暂无数据</div>';
         return;
       }
 
-      let html = `
+      const rows = pcState.finalData.map(row => `
+        <tr>
+          <td><input type="checkbox" id="pc_inc_${row.uid}" ${row.includeUpload ? "checked" : ""}></td>
+          <td><span class="pc-tag normal">待修改</span></td>
+          <td>${pcRenderErrorLevelTag(row.errorLevel)}</td>
+          <td>${escapeHtml(row.errorType)}</td>
+          <td>${escapeHtml(row.key)}</td>
+          <td>${pcRenderMultiLine(row.lang)}</td>
+          <td>${escapeHtml(row.zh)}</td>
+          <td><textarea class="pc-edit-jp" id="pc_jp_${row.uid}">${escapeHtml(row.editJp)}</textarea></td>
+        </tr>
+      `).join("");
+
+      pcEls.finalTableWrap.innerHTML = `
         <table>
           <thead>
             <tr>
-              <th>进入上传表</th>
-              <th>操作</th>
+                            <th>进入上传表</th>
               <th>状态</th>
               <th>错误级别</th>
               <th>错误类型</th>
-              <th>id</th>
               <th>key</th>
               <th>语言版本</th>
               <th>zh 中文原文</th>
               <th>修改后译文 jp</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody>${rows}</tbody>
+        </table>
       `;
-
-      finalData.forEach(row => {
-        const checked = row.includeUpload && !row.ignored ? 'checked' : '';
-        const disabled = row.ignored ? 'disabled' : '';
-
-        html += `
-          <tr>
-            <td>
-              <input type="checkbox" id="inc_${row.uid}" ${checked} ${disabled} />
-            </td>
-            <td>
-              <button class="small-btn ignore" onclick="ignoreFinalRow('${row.uid}')">忽略</button>
-            </td>
-            <td>${renderFinalStatus(row)}</td>
-            <td>${renderErrorLevelTag(row.errorLevel)}</td>
-            <td>${renderMultiLine(row.errorType)}</td>
-            <td>${renderMultiLine(row.id)}</td>
-            <td>${escapeHtml(row.key)}</td>
-            <td>${renderMultiLine(row.lang)}</td>
-            <td>${escapeHtml(row.zh)}</td>
-            <td>
-              <textarea class="edit-jp" id="jp_${row.uid}" ${row.ignored ? 'disabled' : ''}>${escapeHtml(row.editJp)}</textarea>
-            </td>
-          </tr>
-        `;
-      });
-
-      html += '</tbody></table>';
-      container.innerHTML = html;
     }
 
-    function ignoreFinalRow(uid) {
-      updateDataFromDom();
-
-      const row = finalData.find(r => r.uid === uid);
-      if (!row) return;
-
-      row.ignored = true;
-      row.includeUpload = false;
-
-      if (row.isAlert) {
-        row.alertStatus = 'ignored';
-      }
-
-      const alertRow = alertData.find(a => a.sourceUid === uid);
-      if (alertRow) {
-        alertRow.status = 'ignored';
-      }
-
-      renderAlertTable();
-      renderFinalTable();
-    }
-
-    function ignoreAlertRow(uid) {
-      updateDataFromDom();
-
-      const alertRow = alertData.find(a => a.sourceUid === uid);
-      const finalRow = finalData.find(r => r.uid === uid);
-
-      if (alertRow) {
-        alertRow.status = 'ignored';
-      }
-
-      if (finalRow) {
-        finalRow.ignored = true;
-        finalRow.includeUpload = false;
-        finalRow.alertStatus = 'ignored';
-      }
-
-      renderAlertTable();
-      renderFinalTable();
-    }
-
-    function checkAlertRow(uid) {
-      updateDataFromDom();
-
-      const alertRow = alertData.find(a => a.sourceUid === uid);
-      const finalRow = finalData.find(r => r.uid === uid);
-
-      if (alertRow) {
-        alertRow.status = 'checked';
-      }
-
-      if (finalRow) {
-        finalRow.ignored = false;
-        finalRow.includeUpload = true;
-        finalRow.alertStatus = 'checked';
-
-        if (alertRow) {
-          finalRow.editJp = alertRow.editJp;
-        }
-      }
-
-      renderAlertTable();
-      renderFinalTable();
-    }
-
-    function renderStatusTag(status) {
-      if (status === 'checked') return '<span class="tag checked">已检查</span>';
-      if (status === 'ignored') return '<span class="tag ignored">已忽略</span>';
-      return '<span class="tag pending">待检查</span>';
-    }
-
-    function renderFinalStatus(row) {
-      if (row.ignored) return '<span class="tag ignored">已忽略</span>';
-      if (row.isAlert && row.alertStatus === 'pending') return '<span class="tag pending">提醒待检查</span>';
-      if (row.isAlert && row.alertStatus === 'checked') return '<span class="tag checked">提醒已检查</span>';
-      if (row.isAlert && row.alertStatus === 'ignored') return '<span class="tag ignored">提醒已忽略</span>';
-      return '<span class="tag normal">待修改</span>';
-    }
-
-    function renderErrorLevelTag(errorLevel) {
-      const type = normalizeErrorLevel(errorLevel);
-
-      if (type === '阻断') return '<span class="level-tag block">阻断</span>';
-      if (type === '致命') return '<span class="level-tag fatal">致命</span>';
-      if (type === '提醒') return '<span class="level-tag notice">提醒</span>';
-      if (type === '警告') return '<span class="level-tag warn">警告</span>';
-
-      return '<span class="level-tag empty">空</span>';
-    }
-
-    function renderMultiLine(value) {
-      return `<span class="multi-line">${escapeHtml(value)}</span>`;
-    }
-
-    function updateDataFromDom() {
-      finalData.forEach(row => {
-        const jpEl = document.getElementById('jp_' + row.uid);
-        const incEl = document.getElementById('inc_' + row.uid);
-
+    function pcUpdateDataFromDom() {
+      pcState.finalData.forEach(row => {
+        const jpEl = document.getElementById("pc_jp_" + row.uid);
+        const incEl = document.getElementById("pc_inc_" + row.uid);
         if (jpEl) row.editJp = jpEl.value;
         if (incEl) row.includeUpload = incEl.checked;
       });
 
-      alertData.forEach(row => {
-        const jpEl = document.getElementById('alert_jp_' + row.sourceUid);
+      pcState.alertData.forEach(row => {
+        const jpEl = document.getElementById("pc_alert_jp_" + row.sourceUid);
         if (jpEl) row.editJp = jpEl.value;
+      });
+    }
 
-        const finalRow = finalData.find(r => r.uid === row.sourceUid);
-        if (finalRow) {
-          finalRow.alertStatus = row.status;
+    function pcExportResults() {
+      if (!pcState.finalData.length && !pcState.alertData.length) {
+        alert("暂无可导出的结果，请先执行参数检查。");
+        return;
+      }
 
-          if (row.status === 'checked') {
-            finalRow.editJp = row.editJp;
-            finalRow.includeUpload = true;
-            finalRow.ignored = false;
+      pcUpdateDataFromDom();
+
+      const finalRows = [[
+        "id",
+        "key",
+        "语言版本",
+        "中文原文",
+        "原错误译文",
+        "修改后译文",
+        "错误类型",
+        "错误级别",
+        "是否提醒项",
+        "是否进入上传表"
+      ]];
+
+      pcState.finalData.forEach(row => {
+        finalRows.push([
+          row.id,
+          row.key,
+          row.lang,
+          row.zh,
+          row.wrongTrans,
+          row.editJp,
+          row.errorType,
+          row.errorLevel,
+          row.isAlert ? "是" : "否",
+          row.includeUpload ? "是" : "否"
+        ]);
+      });
+
+      const alertRows = [[
+        "id",
+        "key",
+        "语言版本",
+        "参数全量表中文原文",
+        "筛选表中文",
+        "原错误译文",
+        "修改后译文",
+        "错误类型",
+        "错误级别"
+      ]];
+
+      pcState.alertData.forEach(row => {
+        alertRows.push([
+          row.id,
+          row.key,
+          row.lang,
+          row.zh,
+          row.filterZh,
+          row.wrongTrans,
+          row.editJp,
+          row.errorType,
+          row.errorLevel
+        ]);
+      });
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(finalRows), "最终需修改文本");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(alertRows), "单独提醒");
+      XLSX.writeFile(wb, "最强蜗牛_日语本地化_参数检查结果.xlsx");
+    }
+
+    function pcExportUploadExcel() {
+      if (!pcState.finalData.length) {
+        alert("暂无可导出的上传表，请先执行参数检查。");
+        return;
+      }
+
+      pcUpdateDataFromDom();
+
+      const batchName = pcGetNormalizedBatchName();
+      const rows = [["翻译上传批次", "key", "zh", "jp"]];
+      const seen = new Set();
+
+      pcSortByErrorLevel(pcState.finalData).forEach(row => {
+        if (!row.includeUpload || !row.key) return;
+
+        const dedupeKey = `${row.key}||${row.zh}`;
+        if (seen.has(dedupeKey)) return;
+        seen.add(dedupeKey);
+
+        rows.push([batchName, row.key, row.zh, row.editJp]);
+      });
+
+      if (rows.length <= 1) {
+        alert("没有可进入上传表的数据。");
+        return;
+      }
+
+      downloadAoa(rows, "上传表", `${batchName}.xlsx`);
+    }
+
+    function pcExportFilterTemplate() {
+      const rows = [["key", "中文", "译文"]];
+      const seen = new Set();
+
+      pcState.filterData.forEach(row => {
+        const dedupeKey = `${row.key}||${row.zh}`;
+        if (seen.has(dedupeKey)) return;
+        seen.add(dedupeKey);
+        rows.push([row.key, row.zh, row.trans || ""]);
+      });
+
+      pcState.alertData.forEach(row => {
+        const dedupeKey = `${row.key}||${row.zh}`;
+        if (seen.has(dedupeKey)) return;
+        seen.add(dedupeKey);
+        rows.push([row.key, row.zh, row.editJp || row.wrongTrans || ""]);
+      });
+
+      downloadAoa(rows, "筛选表", "filter_template_新版.xlsx");
+    }
+
+    function pcResetAll() {
+      pcState.fullData = [];
+      pcState.filterData = [];
+      pcState.finalData = [];
+      pcState.alertData = [];
+      pcState.uidCounter = 1;
+
+      pcEls.fullFile.value = "";
+      pcEls.filterFile.value = "";
+
+      setStatusByEl(pcEls.fullStatus, "尚未导入文件");
+      setStatusByEl(pcEls.filterStatus, "尚未导入文件");
+
+      pcEls.countFull.textContent = "0";
+      pcEls.countFilter.textContent = "0";
+      pcEls.countFinal.textContent = "0";
+      pcEls.countAlert.textContent = "0";
+      pcEls.uploadBatch.value = pcGetTodayMMdd() + "参数检查上传";
+
+      pcEls.alertTableWrap.innerHTML = '<div class="empty">暂无数据</div>';
+      pcEls.finalTableWrap.innerHTML = '<div class="empty">暂无数据</div>';
+    }
+
+    pcEls.uploadBatch.value = pcGetTodayMMdd() + "参数检查上传";
+
+    pcEls.fullFile.addEventListener("change", async event => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      try {
+        pcState.fullData = pcNormalizeFullData(await readFirstSheetAoa(file));
+        setStatusByEl(pcEls.fullStatus, `已导入：${file.name}（${pcState.fullData.length} 条）`, "ok");
+        pcEls.countFull.textContent = pcState.fullData.length;
+      } catch (error) {
+        setStatusByEl(pcEls.fullStatus, `读取失败：${error.message}`, "err");
+      }
+    });
+
+    pcEls.filterFile.addEventListener("change", async event => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      try {
+        pcState.filterData = pcNormalizeFilterData(await readFirstSheetAoa(file));
+        setStatusByEl(pcEls.filterStatus, `已导入：${file.name}（${pcState.filterData.length} 条）`, "ok");
+        pcEls.countFilter.textContent = pcState.filterData.length;
+      } catch (error) {
+        setStatusByEl(pcEls.filterStatus, `读取失败：${error.message}`, "err");
+      }
+    });
+
+    document.getElementById("pcTemplateBtn").addEventListener("click", () => {
+      downloadAoa([["key", "中文", "译文"]], "筛选表", "filter_template.xlsx");
+    });
+    document.getElementById("pcRunBtn").addEventListener("click", pcRunCheck);
+    document.getElementById("pcExportResultBtn").addEventListener("click", pcExportResults);
+    document.getElementById("pcExportUploadBtn").addEventListener("click", pcExportUploadExcel);
+    document.getElementById("pcExportFilterBtn").addEventListener("click", pcExportFilterTemplate);
+    document.getElementById("pcResetBtn").addEventListener("click", pcResetAll);
+
+    const gcState = {
+      xbenchGroups: [],
+      xbenchRows: [],
+      fullRows: [],
+      fullIndex: new Map(),
+      fullByKey: new Map(),
+      editRows: [],
+      reminderRows: [],
+      editedRows: []
+    };
+
+    const gcEls = {
+      xbenchFile: document.getElementById("gcXbenchFile"),
+      langsFile: document.getElementById("gcLangsFile"),
+      labelsFile: document.getElementById("gcLabelsFile"),
+      editedFile: document.getElementById("gcEditedFile"),
+
+      xbenchStatus: document.getElementById("gcXbenchStatus"),
+      langsStatus: document.getElementById("gcLangsStatus"),
+      labelsStatus: document.getElementById("gcLabelsStatus"),
+      editedStatus: document.getElementById("gcEditedStatus"),
+
+      uploadBatch: document.getElementById("gcUploadBatch"),
+
+      buildBtn: document.getElementById("gcBuildBtn"),
+      exportOfflineBtn: document.getElementById("gcExportOfflineBtn"),
+      exportReminderBtn: document.getElementById("gcExportReminderBtn"),
+      resetBtn: document.getElementById("gcResetBtn"),
+
+      exportUploadAllBtn: document.getElementById("gcExportUploadAllBtn"),
+      exportUploadLangsBtn: document.getElementById("gcExportUploadLangsBtn"),
+      exportUploadLabelsBtn: document.getElementById("gcExportUploadLabelsBtn"),
+
+      groupCount: document.getElementById("gcGroupCount"),
+      xbenchRowCount: document.getElementById("gcXbenchRowCount"),
+      langsCount: document.getElementById("gcLangsCount"),
+      labelsCount: document.getElementById("gcLabelsCount"),
+      matchedCount: document.getElementById("gcMatchedCount"),
+      editableCount: document.getElementById("gcEditableCount"),
+      referenceCount: document.getElementById("gcReferenceCount"),
+      reminderCount: document.getElementById("gcReminderCount"),
+
+      editPreview: document.getElementById("gcEditPreview"),
+      reminderPreview: document.getElementById("gcReminderPreview")
+    };
+
+    function gcNormHeader(value) {
+      return cleanCell(value).replace(/\s+/g, "").replace(/　/g, "").toLowerCase();
+    }
+
+    function gcFindCol(headerRow, names, fallback) {
+      const headers = headerRow.map(gcNormHeader);
+      const targets = names.map(gcNormHeader);
+
+      for (const name of targets) {
+        const index = headers.indexOf(name);
+        if (index >= 0) return index;
+      }
+
+      return fallback;
+    }
+
+    function gcFindHeaderIndex(rows, requiredNames) {
+      const names = requiredNames.map(gcNormHeader);
+
+      for (let i = 0; i < Math.min(rows.length, 100); i++) {
+        const headers = (rows[i] || []).map(gcNormHeader);
+        if (names.every(name => headers.includes(name))) return i;
+      }
+
+      return -1;
+    }
+
+    function gcUniqueList(values) {
+      return [...new Set(values.map(cleanCell).filter(Boolean))];
+    }
+
+    function gcInferSheetFromText(text) {
+      const lower = String(text || "").toLowerCase();
+
+      if (lower.includes("labels") || lower.includes("_labels") || lower.includes("label")) {
+        return "Labels";
+      }
+
+      if (lower.includes("langs") || lower.includes("_langs") || lower.includes("lang")) {
+        return "Langs";
+      }
+
+      return "";
+    }
+
+    function gcParseXbench(rows) {
+      let headerIndex = -1;
+      let sourceIdx = -1;
+      let targetIdx = -1;
+      let commentsIdx = -1;
+      let metadataIdx = -1;
+
+      for (let i = 0; i < Math.min(rows.length, 150); i++) {
+        const row = rows[i] || [];
+
+        row.forEach((cell, index) => {
+          const header = gcNormHeader(cell);
+
+          if (header === "source") sourceIdx = index;
+          if (header === "target") targetIdx = index;
+          if (header === "comments") commentsIdx = index;
+          if (header === "metadata") metadataIdx = index;
+        });
+
+        if (sourceIdx >= 0 && targetIdx >= 0) {
+          headerIndex = i;
+          break;
+        }
+      }
+
+      if (headerIndex < 0) {
+        throw new Error("未识别到 Xbench 表头 Source / Target。请确认导入的是 Exported QA Report。");
+      }
+
+      const groups = [];
+      let currentGroup = null;
+      let currentIssueType = "";
+
+      function pushCurrentGroup() {
+        if (currentGroup && currentGroup.rows.length) {
+          groups.push(currentGroup);
+        }
+        currentGroup = null;
+      }
+
+      for (let i = headerIndex + 1; i < rows.length; i++) {
+        const row = rows[i] || [];
+
+        const source = cleanCell(row[sourceIdx]);
+        const target = cleanCell(row[targetIdx]);
+        const comments = commentsIdx >= 0 ? cleanCell(row[commentsIdx]) : "";
+        const metadata = metadataIdx >= 0 ? cleanCell(row[metadataIdx]) : "";
+
+        const leftCells = row.slice(0, sourceIdx).map(cleanCell).filter(Boolean);
+        const leftInfo = leftCells.join(" ");
+        const firstNonEmpty = row.map(cleanCell).find(Boolean) || "";
+
+        const isCaseHeader =
+          firstNonEmpty &&
+          !source &&
+          !target &&
+          leftCells.length <= 1 &&
+          !/^肥鹅_/i.test(firstNonEmpty) &&
+          !/\.xlsx/i.test(firstNonEmpty) &&
+          !/%$/.test(firstNonEmpty);
+
+        if (isCaseHeader) {
+          pushCurrentGroup();
+
+          currentIssueType = firstNonEmpty;
+          currentGroup = {
+            groupId: "",
+            source: "",
+            issueType: currentIssueType,
+            rows: []
+          };
+
+          continue;
+        }
+
+        if (!source || !target) continue;
+
+        if (!currentGroup) {
+          currentGroup = {
+            groupId: "",
+            source,
+            issueType: currentIssueType || "未分类问题",
+            rows: []
+          };
+        }
+
+        if (!currentGroup.source) currentGroup.source = source;
+
+        currentGroup.rows.push({
+          source,
+          target,
+          comments,
+          metadata,
+          leftInfo,
+          sheetName: gcInferSheetFromText(`${leftInfo} ${metadata}`),
+          xbenchRow: i + 1
+        });
+      }
+
+      pushCurrentGroup();
+
+      groups.forEach((group, index) => {
+        group.groupId = "G" + String(index + 1).padStart(4, "0");
+        if (!group.source && group.rows[0]) group.source = group.rows[0].source;
+      });
+
+      return {
+        groups,
+        rows: groups.flatMap(group => group.rows)
+      };
+    }
+
+    function gcNormalizeFullSheetRows(rows, sheetName) {
+      let headerIndex = -1;
+
+      for (let i = 0; i < Math.min(rows.length, 50); i++) {
+        const headers = (rows[i] || []).map(gcNormHeader);
+
+        if (
+          headers.includes("key") &&
+          (
+            headers.includes("zh") ||
+            headers.includes("zh-cn") ||
+            headers.includes("中文") ||
+            headers.includes("中文原文") ||
+            headers.includes("source")
+          ) &&
+          (
+            headers.includes("jp") ||
+            headers.includes("ja-jp") ||
+            headers.includes("日文") ||
+            headers.includes("日语") ||
+            headers.includes("译文") ||
+            headers.includes("target")
+          )
+        ) {
+          headerIndex = i;
+          break;
+        }
+      }
+
+      const hasHeader = headerIndex >= 0;
+      const header = hasHeader ? rows[headerIndex] : [];
+      const start = hasHeader ? headerIndex + 1 : 0;
+
+      const textBatchIdx = hasHeader
+        ? gcFindCol(header, ["文本包批次", "文本批次", "textBatch"], 0)
+        : 0;
+
+      const transBatchIdx = hasHeader
+        ? gcFindCol(header, ["翻译批次", "翻译上传批次", "translationBatch"], 1)
+        : 1;
+
+      const keyIdx = hasHeader
+        ? gcFindCol(header, ["key", "键"], 2)
+        : 2;
+
+      const zhIdx = hasHeader
+        ? gcFindCol(header, ["zh", "zh-CN", "中文", "中文原文", "source"], 3)
+        : 3;
+
+      const jpIdx = hasHeader
+        ? gcFindCol(header, ["jp", "ja-JP", "日文", "日语", "译文", "target"], 4)
+        : 4;
+
+      return rows.slice(start).map((row, index) => ({
+        sheetName,
+        rowNumber: start + index + 1,
+        textBatch: cleanCell(row[textBatchIdx]),
+        translationBatch: cleanCell(row[transBatchIdx]),
+        key: cleanCell(row[keyIdx]),
+        zh: cleanCell(row[zhIdx]),
+        jp: cleanCell(row[jpIdx])
+      })).filter(row => row.key || row.zh || row.jp || row.textBatch || row.translationBatch);
+    }
+
+    function gcRebuildFullIndexes() {
+      gcState.fullIndex = new Map();
+      gcState.fullByKey = new Map();
+
+      gcState.fullRows.forEach(row => {
+        const pairKey = `${normText(row.zh)}||${normText(row.jp)}`;
+
+        if (!gcState.fullIndex.has(pairKey)) {
+          gcState.fullIndex.set(pairKey, []);
+        }
+
+        gcState.fullIndex.get(pairKey).push(row);
+
+        if (row.key) {
+          const sheetKey = `${row.sheetName}||${row.key}`;
+
+          if (!gcState.fullByKey.has(sheetKey)) {
+            gcState.fullByKey.set(sheetKey, []);
           }
 
-          if (row.status === 'ignored') {
-            finalRow.includeUpload = false;
-            finalRow.ignored = true;
+          gcState.fullByKey.get(sheetKey).push(row);
+
+          if (!gcState.fullByKey.has(row.key)) {
+            gcState.fullByKey.set(row.key, []);
           }
+
+          gcState.fullByKey.get(row.key).push(row);
         }
       });
     }
 
-    function exportResults() {
-      if (!finalData.length && !alertData.length) {
-        alert('暂无可导出的结果，请先执行参数检查。');
-        return;
-      }
+    function gcUpdateFullCounts() {
+      const langsCount = gcState.fullRows.filter(row => row.sheetName === "Langs").length;
+      const labelsCount = gcState.fullRows.filter(row => row.sheetName === "Labels").length;
 
-      updateDataFromDom();
-
-      finalData = sortByErrorLevel(finalData);
-      alertData = sortByErrorLevel(alertData);
-
-      const wb = XLSX.utils.book_new();
-
-      const finalSheetData = finalData.map(row => ({
-        id: row.id,
-        key: row.key,
-        语言版本: row.lang,
-        中文原文: row.zh,
-        原错误译文: row.wrongTrans,
-        修改后译文: row.editJp,
-        错误类型: row.errorType,
-        错误级别: row.errorLevel,
-        是否提醒项: row.isAlert ? '是' : '否',
-        提醒处理状态: row.isAlert ? getStatusText(row.alertStatus) : '',
-        是否忽略: row.ignored ? '是' : '否',
-        是否进入上传表: row.includeUpload && !row.ignored ? '是' : '否'
-      }));
-
-      const alertSheetData = alertData.map(row => ({
-        id: row.id,
-        key: row.key,
-        语言版本: row.lang,
-        参数全量表中文原文: row.fullZh,
-        筛选表中文: row.filterZh,
-        原错误译文: row.wrongTrans,
-        修改后译文: row.editJp,
-        错误类型: row.errorType,
-        错误级别: row.errorLevel,
-        提醒处理状态: getStatusText(row.status)
-      }));
-
-      const ws1 = XLSX.utils.json_to_sheet(finalSheetData);
-      const ws2 = XLSX.utils.json_to_sheet(alertSheetData);
-
-      XLSX.utils.book_append_sheet(wb, ws1, '最终需修改文本');
-      XLSX.utils.book_append_sheet(wb, ws2, '单独提醒');
-
-      XLSX.writeFile(wb, '最强蜗牛_日语本地化_参数检查结果.xlsx');
+      gcEls.langsCount.textContent = langsCount;
+      gcEls.labelsCount.textContent = labelsCount;
     }
 
-    function exportUploadExcel() {
-      if (!finalData.length) {
-        alert('暂无可导出的上传表，请先执行参数检查。');
+    async function gcImportFullFile(file, sheetName, statusEl) {
+      if (!file) return;
+
+      try {
+        const rows = await readFirstSheetAoa(file);
+        const normalized = gcNormalizeFullSheetRows(rows, sheetName);
+
+        gcState.fullRows = gcState.fullRows
+          .filter(row => row.sheetName !== sheetName)
+          .concat(normalized);
+
+        gcRebuildFullIndexes();
+        gcUpdateFullCounts();
+
+        setStatusByEl(statusEl, `已导入：${file.name}（${normalized.length} 行）`, "ok");
+      } catch (error) {
+        setStatusByEl(statusEl, `读取失败：${error.message}`, "err");
+      }
+    }
+
+    function gcRenderSummary(matchedCount = 0) {
+      const editableCount = gcState.editRows.filter(row => row.type === "可编辑").length;
+      const referenceCount = gcState.editRows.filter(row => row.type === "旧文本参考").length;
+
+      gcEls.groupCount.textContent = gcState.xbenchGroups.length;
+      gcEls.xbenchRowCount.textContent = gcState.xbenchRows.length;
+      gcEls.matchedCount.textContent = matchedCount;
+      gcEls.editableCount.textContent = editableCount;
+      gcEls.referenceCount.textContent = referenceCount;
+      gcEls.reminderCount.textContent = gcState.reminderRows.length;
+
+      gcUpdateFullCounts();
+    }
+
+    function gcBuildConsistencyData() {
+      if (!gcState.xbenchGroups.length) {
+        alert("请先导入 Xbench 结果表。");
         return;
       }
 
-      updateDataFromDom();
-
-      const pendingAlerts = alertData.filter(row => row.status === 'pending');
-
-      if (pendingAlerts.length) {
-        const sample = pendingAlerts.slice(0, 10).map(row => {
-          return `key：${row.key}，中文原文：${row.fullZh}`;
-        }).join('\n');
-
-        alert(
-          '请先处理“单独提醒”中的待检查项目。\n\n' +
-          '这些项目存在 key 相同但中文不同的情况，需要点击“忽略”或“已检查”后，才能导出本地化工具上传表。\n\n' +
-          sample +
-          (pendingAlerts.length > 10 ? `\n……等共 ${pendingAlerts.length} 条` : '')
-        );
+      if (!gcState.fullRows.length) {
+        alert("请先导入 Langs 或 Labels 全量表。");
         return;
       }
 
-      finalData = sortByErrorLevel(finalData);
+      const defaultBatch = cleanCell(gcEls.uploadBatch.value) || "0528一致性修复上传";
+      const editRows = [];
+      const reminderRows = [];
+      let matchedCount = 0;
 
-      const batchName = getNormalizedBatchName();
-      const uploadRows = [];
+      gcState.xbenchGroups.forEach(group => {
+        const matchRows = [];
+        const matchSeen = new Set();
 
-      finalData.forEach(row => {
-        if (row.ignored) return;
-        if (!row.includeUpload) return;
-        if (!row.key) return;
+        group.rows.forEach(xrow => {
+          const pairKey = `${normText(xrow.source)}||${normText(xrow.target)}`;
+          const allMatches = gcState.fullIndex.get(pairKey) || [];
 
-        uploadRows.push({
-          翻译上传批次: batchName,
-          key: row.key,
-          zh: row.zh,
-          jp: row.editJp
+          const matches = xrow.sheetName
+            ? allMatches.filter(row => row.sheetName === xrow.sheetName)
+            : allMatches;
+
+          if (!matches.length) {
+            reminderRows.push({
+              groupId: group.groupId,
+              sheetName: xrow.sheetName || "",
+              zh: xrow.source,
+              type: xrow.sheetName
+                ? `Xbench译法未匹配到${xrow.sheetName}全量表`
+                : "Xbench译法未匹配到全量表",
+              oldJp: "",
+              newJp: xrow.target,
+              oldKeys: "",
+              newKeys: "",
+              suggestion: "请确认 Xbench 结果是否来自当前全量表，或是否存在空格/换行差异。",
+              issueType: group.issueType,
+              comments: xrow.comments
+            });
+          }
+
+          matches.forEach(match => {
+            const uniqueKey = `${match.sheetName}||${match.rowNumber}||${match.key}||${match.zh}||${match.jp}`;
+            if (matchSeen.has(uniqueKey)) return;
+
+            matchSeen.add(uniqueKey);
+
+            matchRows.push({
+              ...match,
+              xbenchSource: xrow.source,
+              xbenchTarget: xrow.target,
+              xbenchComments: xrow.comments,
+              xbenchMetadata: xrow.metadata,
+              xbenchSheetName: xrow.sheetName || ""
+            });
+          });
+        });
+
+        matchedCount += matchRows.length;
+
+        const editableRows = matchRows.filter(row => cleanCell(row.translationBatch));
+        const referenceRows = matchRows.filter(row => !cleanCell(row.translationBatch));
+
+        const referenceJps = gcUniqueList(referenceRows.map(row => row.jp));
+        const editableJps = gcUniqueList(editableRows.map(row => row.jp));
+        const referenceKeys = gcUniqueList(referenceRows.map(row => `${row.sheetName}:${row.key}`));
+        const editableKeys = gcUniqueList(editableRows.map(row => `${row.sheetName}:${row.key}`));
+        const groupTargets = gcUniqueList(group.rows.map(row => row.target));
+        const groupSheets = gcUniqueList(matchRows.map(row => row.sheetName));
+
+        if (matchRows.length && !editableRows.length) {
+          reminderRows.push({
+            groupId: group.groupId,
+            sheetName: groupSheets.join("\n"),
+            zh: group.source,
+            type: "仅匹配到旧文本，无可编辑新批次",
+            oldJp: referenceJps.join("\n"),
+            newJp: "",
+            oldKeys: referenceKeys.join("\n"),
+            newKeys: "",
+            suggestion: "旧文本不进入上传表，但该组可作为术语/TM 复盘参考。",
+            issueType: group.issueType,
+            comments: ""
+          });
+        }
+
+        if (referenceRows.length && editableRows.length) {
+          const hasConflict = referenceJps.some(oldJp => editableJps.some(newJp => oldJp !== newJp));
+
+          if (hasConflict) {
+            reminderRows.push({
+              groupId: group.groupId,
+              sheetName: groupSheets.join("\n"),
+              zh: group.source,
+              type: "新批次疑似偏离旧文本译法",
+              oldJp: referenceJps.join("\n"),
+              newJp: editableJps.join("\n"),
+              oldKeys: referenceKeys.join("\n"),
+              newKeys: editableKeys.join("\n"),
+              suggestion: "旧文本不上传，但已参与全局判断。请确认新批次是否被错误 TM 或术语带偏。",
+              issueType: group.issueType,
+              comments: ""
+            });
+          }
+        }
+
+        matchRows.forEach(match => {
+          const isEditable = Boolean(cleanCell(match.translationBatch));
+
+          editRows.push({
+            upload: isEditable ? "是" : "否",
+            groupId: group.groupId,
+            sheetName: match.sheetName,
+            issueType: group.issueType,
+            type: isEditable ? "可编辑" : "旧文本参考",
+            matchStatus: "已匹配",
+            key: match.key,
+            candidateKeys: gcUniqueList(matchRows.map(row => `${row.sheetName}:${row.key}`)).join("\n"),
+            textBatch: match.textBatch,
+            oldTranslationBatch: match.translationBatch,
+            uploadBatch: defaultBatch,
+            zh: match.zh,
+            currentJp: match.jp,
+            fixedJp: match.jp,
+            oldReferenceJp: referenceJps.join("\n"),
+            oldReferenceKey: referenceKeys.join("\n"),
+            groupTargets: groupTargets.join("\n"),
+            xbenchComments: match.xbenchComments,
+            note: isEditable
+              ? (referenceRows.length ? "存在旧文本参考，请确认是否需要统一。" : "")
+              : "翻译批次为空，仅作参考，不进入上传表。"
+          });
         });
       });
 
-      if (!uploadRows.length) {
-        alert('没有可进入上传表的数据。请确认是否全部被忽略或取消勾选。');
+      gcState.editRows = editRows;
+      gcState.reminderRows = reminderRows;
+
+      gcRenderSummary(matchedCount);
+      gcRenderEditPreview();
+      gcRenderReminderPreview();
+    }
+
+    function gcRenderEditPreview() {
+      if (!gcState.editRows.length) {
+        gcEls.editPreview.innerHTML = '<div class="empty">暂无离线编辑数据。</div>';
         return;
       }
 
-      const dedupedRows = dedupeUploadRows(uploadRows);
+      const rows = gcState.editRows.slice(0, 500).map(row => `
+        <tr>
+          <td>${escapeHtml(row.upload)}</td>
+          <td>${escapeHtml(row.groupId)}</td>
+          <td>${escapeHtml(row.sheetName)}</td>
+          <td>${escapeHtml(row.issueType)}</td>
+          <td>${row.type === "可编辑" ? '<span class="gc-type-tag edit">可编辑</span>' : '<span class="gc-type-tag ref">旧文本参考</span>'}</td>
+          <td>${escapeHtml(row.key)}</td>
+          <td>${escapeHtml(row.zh)}</td>
+          <td>${escapeHtml(row.currentJp)}</td>
+          <td>${escapeHtml(row.fixedJp)}</td>
+          <td>${escapeHtml(row.oldTranslationBatch)}</td>
+          <td class="gc-multi">${escapeHtml(row.oldReferenceJp)}</td>
+          <td class="gc-multi">${escapeHtml(row.groupTargets)}</td>
+          <td>${escapeHtml(row.note)}</td>
+        </tr>
+      `).join("");
 
-      const ws = XLSX.utils.json_to_sheet(dedupedRows, {
-        header: ['翻译上传批次', 'key', 'zh', 'jp']
-      });
-
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, '上传表');
-
-      XLSX.writeFile(wb, `${batchName}.xlsx`);
+      gcEls.editPreview.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>是否上传</th>
+              <th>问题组ID</th>
+              <th>Sheet</th>
+              <th>Xbench问题类型</th>
+              <th>类型</th>
+              <th>key</th>
+              <th>zh</th>
+              <th>当前jp</th>
+              <th>修复后jp</th>
+              <th>原翻译批次</th>
+              <th>旧文本参考jp</th>
+              <th>Xbench组内全部译法</th>
+              <th>备注</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
     }
 
-    function dedupeUploadRows(rows) {
-      const map = new Map();
+    function gcRenderReminderPreview() {
+      if (!gcState.reminderRows.length) {
+        gcEls.reminderPreview.innerHTML = '<div class="empty">暂无提醒。</div>';
+        return;
+      }
 
-      rows.forEach(row => {
-        const dedupeKey = `${row.key}||${row.zh}`;
-        if (!map.has(dedupeKey)) {
-          map.set(dedupeKey, row);
+      const rows = gcState.reminderRows.slice(0, 500).map(row => `
+        <tr>
+          <td>${escapeHtml(row.groupId)}</td>
+          <td class="gc-multi">${escapeHtml(row.sheetName || "")}</td>
+          <td>${escapeHtml(row.issueType || "")}</td>
+          <td>${escapeHtml(row.zh)}</td>
+          <td><span class="gc-type-tag warn">${escapeHtml(row.type)}</span></td>
+          <td class="gc-multi">${escapeHtml(row.oldJp)}</td>
+          <td class="gc-multi">${escapeHtml(row.newJp)}</td>
+          <td class="gc-multi">${escapeHtml(row.oldKeys)}</td>
+          <td class="gc-multi">${escapeHtml(row.newKeys)}</td>
+          <td>${escapeHtml(row.suggestion)}</td>
+        </tr>
+      `).join("");
+
+      gcEls.reminderPreview.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>问题组ID</th>
+              <th>Sheet</th>
+              <th>Xbench问题类型</th>
+              <th>zh</th>
+              <th>提醒类型</th>
+              <th>旧文本jp</th>
+              <th>新批次jp / Xbench Target</th>
+              <th>旧文本key</th>
+              <th>新批次key</th>
+              <th>建议</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    function gcExportOfflineEditTable() {
+      if (!gcState.editRows.length) {
+        alert("暂无可导出的离线编辑数据，请先生成。");
+        return;
+      }
+
+      const rows = [[
+        "是否上传",
+        "问题组ID",
+        "Sheet",
+        "Xbench问题类型",
+        "类型",
+        "匹配状态",
+        "key",
+        "候选key列表",
+        "文本包批次",
+        "原翻译批次",
+        "上传批次",
+        "zh",
+        "当前jp",
+        "修复后jp",
+        "旧文本参考jp",
+        "旧文本参考key",
+        "Xbench组内全部译法",
+        "Xbench备注",
+        "备注"
+      ]];
+
+      gcState.editRows.forEach(row => {
+        rows.push([
+          row.upload,
+          row.groupId,
+          row.sheetName,
+          row.issueType,
+          row.type,
+          row.matchStatus,
+          row.key,
+          row.candidateKeys,
+          row.textBatch,
+          row.oldTranslationBatch,
+          row.uploadBatch,
+          row.zh,
+          row.currentJp,
+          row.fixedJp,
+          row.oldReferenceJp,
+          row.oldReferenceKey,
+          row.groupTargets,
+          row.xbenchComments,
+          row.note
+        ]);
+      });
+
+      downloadAoa(rows, "离线编辑表", "0528一致性修复离线编辑表.xlsx");
+    }
+
+    function gcExportReminderTable() {
+      if (!gcState.reminderRows.length) {
+        alert("暂无全局提醒。");
+        return;
+      }
+
+      const rows = [[
+        "问题组ID",
+        "Sheet",
+        "Xbench问题类型",
+        "zh",
+        "提醒类型",
+        "旧文本jp",
+        "新批次jp / Xbench Target",
+        "旧文本key",
+        "新批次key",
+        "建议",
+        "Xbench备注"
+      ]];
+
+      gcState.reminderRows.forEach(row => {
+        rows.push([
+          row.groupId,
+          row.sheetName || "",
+          row.issueType || "",
+          row.zh,
+          row.type,
+          row.oldJp,
+          row.newJp,
+          row.oldKeys,
+          row.newKeys,
+          row.suggestion,
+          row.comments
+        ]);
+      });
+
+      downloadAoa(rows, "全局提醒", "0528一致性修复全局提醒表.xlsx");
+    }
+
+    function gcParseEditedRows(rows) {
+      const headerIndex = gcFindHeaderIndex(rows, ["key", "zh", "修复后jp"]);
+
+      if (headerIndex < 0) {
+        throw new Error("未识别到离线编辑表表头，需要包含 key / zh / 修复后jp。");
+      }
+
+      const header = rows[headerIndex];
+
+      const uploadIdx = gcFindCol(header, ["是否上传"], 0);
+      const groupIdIdx = gcFindCol(header, ["问题组ID"], 1);
+      const sheetIdx = gcFindCol(header, ["Sheet", "sheet", "表"], 2);
+      const issueIdx = gcFindCol(header, ["Xbench问题类型", "问题类型"], 3);
+      const typeIdx = gcFindCol(header, ["类型"], 4);
+      const keyIdx = gcFindCol(header, ["key"], 6);
+      const uploadBatchIdx = gcFindCol(header, ["上传批次", "翻译上传批次"], 10);
+      const zhIdx = gcFindCol(header, ["zh", "中文", "中文原文"], 11);
+      const currentJpIdx = gcFindCol(header, ["当前jp", "原jp", "当前译文"], 12);
+      const fixedJpIdx = gcFindCol(header, ["修复后jp", "修改后jp", "jp"], 13);
+
+      return rows.slice(headerIndex + 1).map(row => ({
+        upload: cleanCell(row[uploadIdx]),
+        groupId: cleanCell(row[groupIdIdx]),
+        sheetName: cleanCell(row[sheetIdx]),
+        issueType: cleanCell(row[issueIdx]),
+        type: cleanCell(row[typeIdx]),
+        key: cleanCell(row[keyIdx]),
+        uploadBatch: cleanCell(row[uploadBatchIdx]),
+        zh: cleanCell(row[zhIdx]),
+        currentJp: cleanCell(row[currentJpIdx]),
+        fixedJp: cleanCell(row[fixedJpIdx])
+      })).filter(row => row.key || row.zh || row.currentJp || row.fixedJp);
+    }
+
+    function gcIsUploadYes(value) {
+      const text = cleanCell(value).toLowerCase();
+      return text === "是" || text === "yes" || text === "y" || text === "true" || text === "1";
+    }
+
+    function gcKeyStillEditable(key, zh, sheetName = "") {
+      let rows = [];
+
+      if (sheetName) {
+        rows = gcState.fullByKey.get(`${sheetName}||${key}`) || [];
+      }
+
+      if (!rows.length) {
+        rows = gcState.fullByKey.get(key) || [];
+      }
+
+      return rows.some(row => {
+        if (sheetName && row.sheetName !== sheetName) return false;
+        if (zh && row.zh && normText(row.zh) !== normText(zh)) return false;
+        return Boolean(cleanCell(row.translationBatch));
+      });
+    }
+
+    function gcBuildUploadRowsFromEdited(sheetFilter = "") {
+      const defaultBatch = cleanCell(gcEls.uploadBatch.value) || "0528一致性修复上传";
+      const uploadRows = [];
+
+      gcState.editedRows.forEach(row => {
+        const sheetName = cleanCell(row.sheetName);
+
+        if (sheetFilter && sheetName !== sheetFilter) return;
+        if (!gcIsUploadYes(row.upload)) return;
+        if (!row.key) return;
+        if (!row.zh) return;
+        if (!row.fixedJp) return;
+        if (normText(row.fixedJp) === normText(row.currentJp)) return;
+        if (!gcKeyStillEditable(row.key, row.zh, sheetName)) return;
+
+        uploadRows.push({
+          sheetName,
+          batch: row.uploadBatch || defaultBatch,
+          key: row.key,
+          zh: row.zh,
+          jp: row.fixedJp
+        });
+      });
+
+      const dedupeMap = new Map();
+
+      uploadRows.forEach(row => {
+        const dedupeKey = `${row.sheetName}||${row.key}||${row.zh}`;
+        if (!dedupeMap.has(dedupeKey)) {
+          dedupeMap.set(dedupeKey, row);
         }
       });
 
-      return Array.from(map.values());
+      return [...dedupeMap.values()];
     }
 
-    function getStatusText(status) {
-      if (status === 'checked') return '已检查';
-      if (status === 'ignored') return '已忽略';
-      if (status === 'pending') return '待检查';
-      return '';
+    function gcDownloadUploadRows(rows, sheetName) {
+      if (!rows.length) return false;
+
+      const aoa = [["翻译批次", "key", "zh", "jp"]];
+
+      rows.forEach(row => {
+        aoa.push([row.batch, row.key, row.zh, row.jp]);
+      });
+
+      const batch = rows[0].batch || cleanCell(gcEls.uploadBatch.value) || "0528一致性修复上传";
+      downloadAoa(aoa, "上传表", `${batch}_${sheetName}上传表.xlsx`);
+
+      return true;
     }
 
-    function getTodayMMdd() {
-      const now = new Date();
-      const mm = String(now.getMonth() + 1).padStart(2, '0');
-      const dd = String(now.getDate()).padStart(2, '0');
-      return mm + dd;
-    }
-
-    function getNormalizedBatchName() {
-      const input = document.getElementById('uploadBatch').value.trim();
-      const today = getTodayMMdd();
-
-      if (!input) {
-        return today + '参数检查上传';
+    function gcExportUploadFromEdited(sheetFilter = "") {
+      if (!gcState.editedRows.length) {
+        alert("请先导入已编辑的离线编辑表。");
+        return;
       }
 
-      if (/^\d{4}/.test(input)) {
-        return input.replace(/^\d{4}/, today);
+      if (!gcState.fullRows.length) {
+        alert("请先导入 Langs 或 Labels 全量表，用于复查 key 的翻译批次是否为空。");
+        return;
       }
 
-      return today + input;
+      if (sheetFilter) {
+        const rows = gcBuildUploadRowsFromEdited(sheetFilter);
+
+        if (!rows.length) {
+          alert(`没有可导出的 ${sheetFilter} 上传内容。`);
+          return;
+        }
+
+        gcDownloadUploadRows(rows, sheetFilter);
+        return;
+      }
+
+      const langsRows = gcBuildUploadRowsFromEdited("Langs");
+      const labelsRows = gcBuildUploadRowsFromEdited("Labels");
+      const otherRows = gcBuildUploadRowsFromEdited("").filter(row => row.sheetName !== "Langs" && row.sheetName !== "Labels");
+
+      let exported = false;
+
+      if (langsRows.length) exported = gcDownloadUploadRows(langsRows, "Langs") || exported;
+      if (labelsRows.length) exported = gcDownloadUploadRows(labelsRows, "Labels") || exported;
+      if (otherRows.length) exported = gcDownloadUploadRows(otherRows, "Other") || exported;
+
+      if (!exported) {
+        alert("没有可导出的上传内容。请确认是否上传=是、修复后jp已修改、且全量表中该 key 的翻译批次不为空。");
+      }
     }
 
-    function resetAll() {
-      fullData = [];
-      filterData = [];
-      finalData = [];
-      alertData = [];
-      uidCounter = 1;
+    function gcReset() {
+      gcState.xbenchGroups = [];
+      gcState.xbenchRows = [];
+      gcState.fullRows = [];
+      gcState.fullIndex = new Map();
+      gcState.fullByKey = new Map();
+      gcState.editRows = [];
+      gcState.reminderRows = [];
+      gcState.editedRows = [];
 
-      document.getElementById('fullFile').value = '';
-      document.getElementById('filterFile').value = '';
+      if (gcEls.xbenchFile) gcEls.xbenchFile.value = "";
+      if (gcEls.langsFile) gcEls.langsFile.value = "";
+      if (gcEls.labelsFile) gcEls.labelsFile.value = "";
+      if (gcEls.editedFile) gcEls.editedFile.value = "";
 
-      document.getElementById('fullStatus').textContent = '尚未导入文件';
-      document.getElementById('filterStatus').textContent = '尚未导入文件';
+      setStatusByEl(gcEls.xbenchStatus, "尚未导入文件");
+      setStatusByEl(gcEls.langsStatus, "尚未导入文件");
+      setStatusByEl(gcEls.labelsStatus, "尚未导入文件");
+      setStatusByEl(gcEls.editedStatus, "尚未导入文件");
 
-      document.getElementById('countFull').textContent = '0';
-      document.getElementById('countFilter').textContent = '0';
-      document.getElementById('countFinal').textContent = '0';
-      document.getElementById('countAlert').textContent = '0';
+      gcEls.groupCount.textContent = "0";
+      gcEls.xbenchRowCount.textContent = "0";
+      gcEls.langsCount.textContent = "0";
+      gcEls.labelsCount.textContent = "0";
+      gcEls.matchedCount.textContent = "0";
+      gcEls.editableCount.textContent = "0";
+      gcEls.referenceCount.textContent = "0";
+      gcEls.reminderCount.textContent = "0";
 
-      document.getElementById('uploadBatch').value = getTodayMMdd() + '参数检查上传';
-
-      document.getElementById('alertTableWrap').innerHTML =
-        '<div class="placeholder" style="padding:16px;">暂无数据</div>';
-
-      document.getElementById('finalTableWrap').innerHTML =
-        '<div class="placeholder" style="padding:16px;">暂无数据</div>';
+      gcEls.editPreview.innerHTML = '<div class="empty">请先导入 Xbench、Langs / Labels 全量表，然后点击“生成离线编辑数据”。</div>';
+      gcEls.reminderPreview.innerHTML = '<div class="empty">暂无提醒。</div>';
     }
 
-    function escapeHtml(str) {
-      return String(str ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
+    gcEls.xbenchFile.addEventListener("change", async event => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      try {
+        const rows = await readFirstSheetAoa(file);
+        const result = gcParseXbench(rows);
+
+        gcState.xbenchGroups = result.groups;
+        gcState.xbenchRows = result.rows;
+
+        gcEls.groupCount.textContent = result.groups.length;
+        gcEls.xbenchRowCount.textContent = result.rows.length;
+
+        setStatusByEl(gcEls.xbenchStatus, `已导入：${file.name}（问题组 ${result.groups.length}，明细行 ${result.rows.length}）`, "ok");
+      } catch (error) {
+        setStatusByEl(gcEls.xbenchStatus, `读取失败：${error.message}`, "err");
+      }
+    });
+
+    gcEls.langsFile.addEventListener("change", event => {
+      gcImportFullFile(event.target.files[0], "Langs", gcEls.langsStatus);
+    });
+
+    gcEls.labelsFile.addEventListener("change", event => {
+      gcImportFullFile(event.target.files[0], "Labels", gcEls.labelsStatus);
+    });
+
+    gcEls.editedFile.addEventListener("change", async event => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      try {
+        const rows = await readFirstSheetAoa(file);
+        gcState.editedRows = gcParseEditedRows(rows);
+
+        setStatusByEl(gcEls.editedStatus, `已导入：${file.name}（${gcState.editedRows.length} 行），可点击下方按钮导出上传表。`, "ok");
+      } catch (error) {
+        setStatusByEl(gcEls.editedStatus, `读取失败：${error.message}`, "err");
+      }
+    });
+
+    gcEls.buildBtn.addEventListener("click", gcBuildConsistencyData);
+    gcEls.exportOfflineBtn.addEventListener("click", gcExportOfflineEditTable);
+    gcEls.exportReminderBtn.addEventListener("click", gcExportReminderTable);
+    gcEls.resetBtn.addEventListener("click", gcReset);
+
+    gcEls.exportUploadAllBtn.addEventListener("click", () => gcExportUploadFromEdited(""));
+    gcEls.exportUploadLangsBtn.addEventListener("click", () => gcExportUploadFromEdited("Langs"));
+    gcEls.exportUploadLabelsBtn.addEventListener("click", () => gcExportUploadFromEdited("Labels"));
+
+    render();
   </script>
 </body>
 </html>
