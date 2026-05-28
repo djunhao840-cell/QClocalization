@@ -2655,153 +2655,157 @@
       gcUpdateFullCounts();
     }
 
-    function gcBuildConsistencyData() {
-      if (!gcState.xbenchGroups.length) {
-        alert("请先导入 Xbench 结果表。");
-        return;
-      }
+     function gcBuildConsistencyData() {
+  if (!gcState.xbenchGroups.length) {
+    alert("请先导入 Xbench 结果表。");
+    return;
+  }
 
-      if (!gcState.fullRows.length) {
-        alert("请先导入 Langs 或 Labels 全量表。");
-        return;
-      }
+  if (!gcState.fullRows.length) {
+    alert("请先导入 Langs 或 Labels 全量表。");
+    return;
+  }
 
-      const defaultBatch = cleanCell(gcEls.uploadBatch.value) || "0528一致性修复上传";
-      const editRows = [];
-      const reminderRows = [];
-      let matchedCount = 0;
+  const defaultBatch = cleanCell(gcEls.uploadBatch.value) || "0528一致性修复上传";
 
-      gcState.xbenchGroups.forEach(group => {
-        const matchRows = [];
-        const matchSeen = new Set();
+  const editRows = [];
+  const reminderRows = [];
+  let matchedCount = 0;
 
-        group.rows.forEach(xrow => {
-          const pairKey = `${normText(xrow.source)}||${normText(xrow.target)}`;
-          const allMatches = gcState.fullIndex.get(pairKey) || [];
+  gcState.xbenchGroups.forEach(group => {
+    const groupTargets = gcUniqueList(group.rows.map(row => row.target));
+    const groupSources = gcUniqueList(group.rows.map(row => row.source));
+    const groupAllMatchedRows = [];
 
-          const matches = xrow.sheetName
-            ? allMatches.filter(row => row.sheetName === xrow.sheetName)
-            : allMatches;
+    group.rows.forEach((xrow, xrowIndex) => {
+      const pairKey = `${normText(xrow.source)}||${normText(xrow.target)}`;
+      // 用 Xbench 每一行 Source + Target 去全量表反查 key
+      const allMatches = gcState.fullIndex.get(pairKey) || [];
 
-          if (!matches.length) {
-            reminderRows.push({
-              groupId: group.groupId,
-              sheetName: xrow.sheetName || "",
-              zh: xrow.source,
-              type: xrow.sheetName
-                ? `Xbench译法未匹配到${xrow.sheetName}全量表`
-                : "Xbench译法未匹配到全量表",
-              oldJp: "",
-              newJp: xrow.target,
-              oldKeys: "",
-              newKeys: "",
-              suggestion: "请确认 Xbench 结果是否来自当前全量表，或是否存在空格/换行差异。",
-              issueType: group.issueType,
-              comments: xrow.comments
-            });
-          }
+      const matches = xrow.sheetName
+        ? allMatches.filter(row => row.sheetName === xrow.sheetName)
+        : allMatches;
 
-          matches.forEach(match => {
-            const uniqueKey = `${match.sheetName}||${match.rowNumber}||${match.key}||${match.zh}||${match.jp}`;
-            if (matchSeen.has(uniqueKey)) return;
-
-            matchSeen.add(uniqueKey);
-
-            matchRows.push({
-              ...match,
-              xbenchSource: xrow.source,
-              xbenchTarget: xrow.target,
-              xbenchComments: xrow.comments,
-              xbenchMetadata: xrow.metadata,
-              xbenchSheetName: xrow.sheetName || ""
-            });
-          });
+      if (!matches.length) {
+        reminderRows.push({
+          groupId: group.groupId,
+          sheetName: xrow.sheetName || "",
+          zh: xrow.source,
+          type: xrow.sheetName
+            ? `Xbench明细未匹配到${xrow.sheetName}全量表`
+            : "Xbench明细未匹配到全量表",
+          oldJp: "",
+          newJp: xrow.target,
+          oldKeys: "",
+          newKeys: "",
+          suggestion: "请确认 Xbench 结果是否来自当前全量表，或是否存在空格/换行差异。",
+          issueType: group.issueType,
+          comments: xrow.comments
         });
 
-        matchedCount += matchRows.length;
+        return;
+      }
 
-        const editableRows = matchRows.filter(row => cleanCell(row.translationBatch));
-        const referenceRows = matchRows.filter(row => !cleanCell(row.translationBatch));
+      matchedCount += matches.length;
 
-        const referenceJps = gcUniqueList(referenceRows.map(row => row.jp));
-        const editableJps = gcUniqueList(editableRows.map(row => row.jp));
-        const referenceKeys = gcUniqueList(referenceRows.map(row => `${row.sheetName}:${row.key}`));
-        const editableKeys = gcUniqueList(editableRows.map(row => `${row.sheetName}:${row.key}`));
-        const groupTargets = gcUniqueList(group.rows.map(row => row.target));
-        const groupSheets = gcUniqueList(matchRows.map(row => row.sheetName));
+      matches.forEach((match, matchIndex) => {
+        groupAllMatchedRows.push(match);
 
-        if (matchRows.length && !editableRows.length) {
-          reminderRows.push({
-            groupId: group.groupId,
-            sheetName: groupSheets.join("\n"),
-            zh: group.source,
-            type: "仅匹配到旧文本，无可编辑新批次",
-            oldJp: referenceJps.join("\n"),
-            newJp: "",
-            oldKeys: referenceKeys.join("\n"),
-            newKeys: "",
-            suggestion: "旧文本不进入上传表，但该组可作为术语/TM 复盘参考。",
-            issueType: group.issueType,
-            comments: ""
-          });
-        }
+        const isEditable = Boolean(cleanCell(match.translationBatch));
 
-        if (referenceRows.length && editableRows.length) {
-          const hasConflict = referenceJps.some(oldJp => editableJps.some(newJp => oldJp !== newJp));
-
-          if (hasConflict) {
-            reminderRows.push({
-              groupId: group.groupId,
-              sheetName: groupSheets.join("\n"),
-              zh: group.source,
-              type: "新批次疑似偏离旧文本译法",
-              oldJp: referenceJps.join("\n"),
-              newJp: editableJps.join("\n"),
-              oldKeys: referenceKeys.join("\n"),
-              newKeys: editableKeys.join("\n"),
-              suggestion: "旧文本不上传，但已参与全局判断。请确认新批次是否被错误 TM 或术语带偏。",
-              issueType: group.issueType,
-              comments: ""
-            });
-          }
-        }
-
-        matchRows.forEach(match => {
-          const isEditable = Boolean(cleanCell(match.translationBatch));
-
-          editRows.push({
-            upload: isEditable ? "是" : "否",
-            groupId: group.groupId,
-            sheetName: match.sheetName,
-            issueType: group.issueType,
-            type: isEditable ? "可编辑" : "旧文本参考",
-            matchStatus: "已匹配",
-            key: match.key,
-            candidateKeys: gcUniqueList(matchRows.map(row => `${row.sheetName}:${row.key}`)).join("\n"),
-            textBatch: match.textBatch,
-            oldTranslationBatch: match.translationBatch,
-            uploadBatch: defaultBatch,
-            zh: match.zh,
-            currentJp: match.jp,
-            fixedJp: match.jp,
-            oldReferenceJp: referenceJps.join("\n"),
-            oldReferenceKey: referenceKeys.join("\n"),
-            groupTargets: groupTargets.join("\n"),
-            xbenchComments: match.xbenchComments,
-            note: isEditable
-              ? (referenceRows.length ? "存在旧文本参考，请确认是否需要统一。" : "")
-              : "翻译批次为空，仅作参考，不进入上传表。"
-          });
+        editRows.push({
+          upload: isEditable ? "是" : "否",
+          groupId: group.groupId,
+          sheetName: match.sheetName,
+          issueType: group.issueType,
+          type: isEditable ? "可编辑" : "旧文本参考",
+          matchStatus: "已匹配",
+          key: match.key,
+          candidateKeys: match.key,
+          textBatch: match.textBatch,
+          oldTranslationBatch: match.translationBatch,
+          uploadBatch: defaultBatch,
+          zh: match.zh,
+          currentJp: match.jp,
+          fixedJp: match.jp,
+          oldReferenceJp: "",
+          oldReferenceKey: "",
+          groupTargets: groupTargets.join("\n"),
+          xbenchComments: xrow.comments,
+          note: isEditable
+            ? "该 key 翻译批次非空，可编辑。"
+            : "该 key 翻译批次为空：旧文本参考，不进入上传表。",
+          xbenchRow: xrow.xbenchRow,
+          matchOrder: `${xrowIndex + 1}-${matchIndex + 1}`
         });
       });
+    });
 
-      gcState.editRows = editRows;
-      gcState.reminderRows = reminderRows;
+    // 组内提醒：同一个 Source 下存在多种 Target
+    const editableRows = groupAllMatchedRows.filter(row => cleanCell(row.translationBatch));
+    const referenceRows = groupAllMatchedRows.filter(row => !cleanCell(row.translationBatch));
 
-      gcRenderSummary(matchedCount);
-      gcRenderEditPreview();
-      gcRenderReminderPreview();
+    const editableJps = gcUniqueList(editableRows.map(row => row.jp));
+    const referenceJps = gcUniqueList(referenceRows.map(row => row.jp));
+    const editableKeys = gcUniqueList(editableRows.map(row => `${row.sheetName}:${row.key}`));
+    const referenceKeys = gcUniqueList(referenceRows.map(row => `${row.sheetName}:${row.key}`));
+    const groupSheets = gcUniqueList(groupAllMatchedRows.map(row => row.sheetName));
+
+    if (referenceRows.length && editableRows.length) {
+      const hasConflict = referenceJps.some(oldJp => editableJps.some(newJp => oldJp !== newJp));
+
+      if (hasConflict) {
+        reminderRows.push({
+          groupId: group.groupId,
+          sheetName: groupSheets.join("\n"),
+          zh: groupSources.join("\n"),
+          type: "新批次与旧文本译法不一致",
+          oldJp: referenceJps.join("\n"),
+          newJp: editableJps.join("\n"),
+          oldKeys: referenceKeys.join("\n"),
+          newKeys: editableKeys.join("\n"),
+          suggestion: "旧文本不上传，但作为参考。请确认新批次是否需要统一。",
+          issueType: group.issueType,
+          comments: ""
+        });
+      }
     }
+
+    if (groupAllMatchedRows.length && !editableRows.length) {
+      reminderRows.push({
+        groupId: group.groupId,
+        sheetName: groupSheets.join("\n"),
+        zh: groupSources.join("\n"),
+        type: "该问题组仅匹配到旧文本",
+        oldJp: referenceJps.join("\n"),
+        newJp: "",
+        oldKeys: referenceKeys.join("\n"),
+        newKeys: "",
+        suggestion: "全部匹配项翻译批次为空，不进入上传表，仅作参考。",
+        issueType: group.issueType,
+        comments: ""
+      });
+    }
+  });
+
+  // 去重：同一个 Sheet + key + zh + jp 不重复导出
+  const editDedupeMap = new Map();
+
+  editRows.forEach(row => {
+    const dedupeKey = `${row.groupId}||${row.sheetName}||${row.key}||${row.zh}||${row.currentJp}`;
+
+    if (!editDedupeMap.has(dedupeKey)) {
+      editDedupeMap.set(dedupeKey, row);
+    }
+  });
+
+  gcState.editRows = [...editDedupeMap.values()];
+  gcState.reminderRows = reminderRows;
+
+  gcRenderSummary(matchedCount);
+  gcRenderEditPreview();
+  gcRenderReminderPreview();
+}
 
     function gcRenderEditPreview() {
       if (!gcState.editRows.length) {
@@ -2813,6 +2817,7 @@
         <tr>
           <td>${escapeHtml(row.upload)}</td>
           <td>${escapeHtml(row.groupId)}</td>
+          <td>${escapeHtml(row.xbenchRow || "")}</td>
           <td>${escapeHtml(row.sheetName)}</td>
           <td>${escapeHtml(row.issueType)}</td>
           <td>${row.type === "可编辑" ? '<span class="gc-type-tag edit">可编辑</span>' : '<span class="gc-type-tag ref">旧文本参考</span>'}</td>
@@ -2833,6 +2838,7 @@
             <tr>
               <th>是否上传</th>
               <th>问题组ID</th>
+              <th>Xbench行号</th>
               <th>Sheet</th>
               <th>Xbench问题类型</th>
               <th>类型</th>
