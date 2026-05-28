@@ -2279,117 +2279,80 @@
       return "";
     }
 
-    function gcParseXbench(rows) {
-      let headerIndex = -1;
-      let sourceIdx = -1;
-      let targetIdx = -1;
-      let commentsIdx = -1;
-      let metadataIdx = -1;
+function gcParseXbench(rows) {
+    const metadata = metadataIdx >= 0 ? cleanCell(row[metadataIdx]) : "";
 
-      for (let i = 0; i < Math.min(rows.length, 150); i++) {
-        const row = rows[i] || [];
+    const leftCells = row.slice(0, sourceIdx).map(cleanCell).filter(Boolean);
+    const leftInfo = leftCells.join(" ");
+    const firstNonEmpty = row.map(cleanCell).find(Boolean) || "";
 
-        row.forEach((cell, index) => {
-          const header = gcNormHeader(cell);
+    // Xbench 小标题行，例如：
+    // Inconsistency in Target
+    // Key Term Mismatch
+    // Numeric Mismatch
+    // Tag Mismatch
+    const isCaseHeader =
+      firstNonEmpty &&
+      !source &&
+      !target &&
+      leftCells.length <= 1 &&
+      !/\.xlsx/i.test(firstNonEmpty) &&
+      !/%$/.test(firstNonEmpty) &&
+      !/^https?:\/\//i.test(firstNonEmpty) &&
+      !/^generatedby$/i.test(normXbenchHeader(firstNonEmpty));
 
-          if (header === "source") sourceIdx = index;
-          if (header === "target") targetIdx = index;
-          if (header === "comments") commentsIdx = index;
-          if (header === "metadata") metadataIdx = index;
-        });
-
-        if (sourceIdx >= 0 && targetIdx >= 0) {
-          headerIndex = i;
-          break;
-        }
-      }
-
-      if (headerIndex < 0) {
-        throw new Error("未识别到 Xbench 表头 Source / Target。请确认导入的是 Exported QA Report。");
-      }
-
-      const groups = [];
-      let currentGroup = null;
-      let currentIssueType = "";
-
-      function pushCurrentGroup() {
-        if (currentGroup && currentGroup.rows.length) {
-          groups.push(currentGroup);
-        }
-        currentGroup = null;
-      }
-
-      for (let i = headerIndex + 1; i < rows.length; i++) {
-        const row = rows[i] || [];
-
-        const source = cleanCell(row[sourceIdx]);
-        const target = cleanCell(row[targetIdx]);
-        const comments = commentsIdx >= 0 ? cleanCell(row[commentsIdx]) : "";
-        const metadata = metadataIdx >= 0 ? cleanCell(row[metadataIdx]) : "";
-
-        const leftCells = row.slice(0, sourceIdx).map(cleanCell).filter(Boolean);
-        const leftInfo = leftCells.join(" ");
-        const firstNonEmpty = row.map(cleanCell).find(Boolean) || "";
-
-        const isCaseHeader =
-          firstNonEmpty &&
-          !source &&
-          !target &&
-          leftCells.length <= 1 &&
-          !/^肥鹅_/i.test(firstNonEmpty) &&
-          !/\.xlsx/i.test(firstNonEmpty) &&
-          !/%$/.test(firstNonEmpty);
-
-        if (isCaseHeader) {
-          pushCurrentGroup();
-
-          currentIssueType = firstNonEmpty;
-          currentGroup = {
-            groupId: "",
-            source: "",
-            issueType: currentIssueType,
-            rows: []
-          };
-
-          continue;
-        }
-
-        if (!source || !target) continue;
-
-        if (!currentGroup) {
-          currentGroup = {
-            groupId: "",
-            source,
-            issueType: currentIssueType || "未分类问题",
-            rows: []
-          };
-        }
-
-        if (!currentGroup.source) currentGroup.source = source;
-
-        currentGroup.rows.push({
-          source,
-          target,
-          comments,
-          metadata,
-          leftInfo,
-          sheetName: gcInferSheetFromText(`${leftInfo} ${metadata}`),
-          xbenchRow: i + 1
-        });
-      }
-
+    if (isCaseHeader) {
       pushCurrentGroup();
 
-      groups.forEach((group, index) => {
-        group.groupId = "G" + String(index + 1).padStart(4, "0");
-        if (!group.source && group.rows[0]) group.source = group.rows[0].source;
-      });
+      currentIssueType = firstNonEmpty;
+      currentGroup = {
+        groupId: "",
+        source: "",
+        issueType: currentIssueType,
+        rows: []
+      };
 
-      return {
-        groups,
-        rows: groups.flatMap(group => group.rows)
+      continue;
+    }
+
+    if (!source || !target) continue;
+
+    if (!currentGroup) {
+      currentGroup = {
+        groupId: "",
+        source,
+        issueType: currentIssueType || "未分类问题",
+        rows: []
       };
     }
+
+    if (!currentGroup.source) currentGroup.source = source;
+
+    currentGroup.rows.push({
+      source,
+      target,
+      comments,
+      metadata,
+      leftInfo,
+      sheetName: gcInferSheetFromText(`${leftInfo} ${metadata}`),
+      xbenchRow: i + 1
+    });
+  }
+
+  pushCurrentGroup();
+
+  groups.forEach((group, index) => {
+    group.groupId = "G" + String(index + 1).padStart(4, "0");
+    if (!group.source && group.rows[0]) {
+      group.source = group.rows[0].source;
+    }
+  });
+
+  return {
+    groups,
+    rows: groups.flatMap(group => group.rows)
+  };
+}
 
     function gcNormalizeFullSheetRows(rows, sheetName) {
       let headerIndex = -1;
@@ -3039,25 +3002,65 @@
       gcEls.reminderPreview.innerHTML = '<div class="empty">暂无提醒。</div>';
     }
 
-    gcEls.xbenchFile.addEventListener("change", async event => {
-      const file = event.target.files[0];
-      if (!file) return;
+gcEls.xbenchFile.addEventListener("change", async event => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  try {
+    const workbook = await readWorkbook(file);
+
+    let parsed = null;
+    let usedSheetName = "";
+
+    for (const sheetName of workbook.SheetNames) {
+      const sheet = workbook.Sheets[sheetName];
+
+      const rows = XLSX.utils.sheet_to_json(sheet, {
+        header: 1,
+        defval: "",
+        blankrows: false
+      });
 
       try {
-        const rows = await readFirstSheetAoa(file);
         const result = gcParseXbench(rows);
 
-        gcState.xbenchGroups = result.groups;
-        gcState.xbenchRows = result.rows;
-
-        gcEls.groupCount.textContent = result.groups.length;
-        gcEls.xbenchRowCount.textContent = result.rows.length;
-
-        setStatusByEl(gcEls.xbenchStatus, `已导入：${file.name}（问题组 ${result.groups.length}，明细行 ${result.rows.length}）`, "ok");
-      } catch (error) {
-        setStatusByEl(gcEls.xbenchStatus, `读取失败：${error.message}`, "err");
+        if (result.rows.length) {
+          parsed = result;
+          usedSheetName = sheetName;
+          break;
+        }
+      } catch (innerError) {
+        // 当前 Sheet 不符合 Xbench 表结构，继续尝试下一个 Sheet
       }
-    });
+    }
+
+    if (!parsed) {
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const firstRows = XLSX.utils.sheet_to_json(firstSheet, {
+        header: 1,
+        defval: "",
+        blankrows: false
+      });
+
+      parsed = gcParseXbench(firstRows);
+      usedSheetName = workbook.SheetNames[0];
+    }
+
+    gcState.xbenchGroups = parsed.groups;
+    gcState.xbenchRows = parsed.rows;
+
+    gcEls.groupCount.textContent = parsed.groups.length;
+    gcEls.xbenchRowCount.textContent = parsed.rows.length;
+
+    setStatusByEl(
+      gcEls.xbenchStatus,
+      `已导入：${file.name}（Sheet：${usedSheetName}，问题组 ${parsed.groups.length}，明细行 ${parsed.rows.length}）`,
+      "ok"
+    );
+  } catch (error) {
+    setStatusByEl(gcEls.xbenchStatus, `读取失败：${error.message}`, "err");
+  }
+});
 
     gcEls.langsFile.addEventListener("change", event => {
       gcImportFullFile(event.target.files[0], "Langs", gcEls.langsStatus);
