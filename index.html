@@ -481,6 +481,7 @@
       color: var(--muted);
       line-height: 1.6;
       margin-top: 8px;
+      white-space: pre-line;
     }
 
     .status.ok {
@@ -1264,6 +1265,7 @@
     function getSheetRows(workbook, sheetName) {
       const sheet = workbook && workbook.Sheets[sheetName];
       if (!sheet) return [];
+
       const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
       const start = isHeaderRow(rows[0]) ? 1 : 0;
 
@@ -1298,9 +1300,11 @@
 
     function levenshtein(a, b) {
       const dp = Array.from({ length: b.length + 1 }, (_, i) => i);
+
       for (let i = 1; i <= a.length; i++) {
         let prev = i - 1;
         dp[0] = i;
+
         for (let j = 1; j <= b.length; j++) {
           const temp = dp[j];
           dp[j] = Math.min(
@@ -1311,13 +1315,16 @@
           prev = temp;
         }
       }
+
       return dp[b.length];
     }
 
     function similarity(a, b) {
       const longer = a.length >= b.length ? a : b;
       const shorter = a.length < b.length ? a : b;
+
       if (!longer.length) return 1;
+
       const distance = levenshtein(longer, shorter);
       return (longer.length - distance) / longer.length;
     }
@@ -1338,7 +1345,13 @@
       removed.forEach(oldRow => {
         const sameRow = newRows[oldRow.rowIndex - 2];
 
-        if (sameRow && sameRow.key && !oldMap.has(sameRow.key) && oldRow.zh && sameRow.zh === oldRow.zh) {
+        if (
+          sameRow &&
+          sameRow.key &&
+          !oldMap.has(sameRow.key) &&
+          oldRow.zh &&
+          sameRow.zh === oldRow.zh
+        ) {
           usedAdded.add(sameRow.key);
           changes.push({
             position: `第${oldRow.rowIndex}行`,
@@ -1354,7 +1367,9 @@
 
         added.forEach(newRow => {
           if (usedAdded.has(newRow.key)) return;
+
           const score = scorePossibleKeyChange(oldRow, newRow);
+
           if (score > bestScore) {
             best = newRow;
             bestScore = score;
@@ -1390,9 +1405,12 @@
 
     function buildDiffNote(addedCount, removedCount, invisibleOnly) {
       const parts = [];
+
       if (addedCount) parts.push(`新增 ${addedCount} 个字符`);
       if (removedCount) parts.push(`删除 ${removedCount} 个字符`);
+
       if (!parts.length) return '<span class="diff-note">内容存在差异</span>';
+
       const invisibleText = invisibleOnly ? "；仅空格/换行/制表符等不可见字符变化" : "";
       return `<span class="diff-note">${parts.join("，")}${invisibleText}</span>`;
     }
@@ -1400,7 +1418,10 @@
     function markChangedText(oldText, newText) {
       const oldChars = [...String(oldText ?? "")];
       const newChars = [...String(newText ?? "")];
-      const dp = Array.from({ length: oldChars.length + 1 }, () => Array(newChars.length + 1).fill(0));
+      const dp = Array.from(
+        { length: oldChars.length + 1 },
+        () => Array(newChars.length + 1).fill(0)
+      );
 
       for (let i = oldChars.length - 1; i >= 0; i--) {
         for (let j = newChars.length - 1; j >= 0; j--) {
@@ -1456,6 +1477,7 @@
       }
 
       const missing = [];
+
       REQUIRED_SHEETS.forEach(sheet => {
         if (!state.newBook.Sheets[sheet]) missing.push(`新全量表缺少 ${sheet}`);
         if (!state.oldBook.Sheets[sheet]) missing.push(`旧全量表缺少 ${sheet}`);
@@ -1473,13 +1495,17 @@
 
         next[sheet].newItems = newRows
           .filter(row => row.key && !oldMap.has(row.key))
-          .map(row => ({ key: row.key, zh: row.zh }));
+          .map(row => ({
+            key: row.key,
+            zh: row.zh
+          }));
 
         next[sheet].zhChanges = newRows
           .filter(row => row.key && oldMap.has(row.key) && row.zh !== oldMap.get(row.key).zh)
           .map(row => {
             const oldZh = oldMap.get(row.key).zh;
             const diff = markChangedText(oldZh, row.zh);
+
             return {
               key: row.key,
               oldZh,
@@ -1517,13 +1543,18 @@
       try {
         const workbook = await readWorkbook(file);
         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: "" });
+        const rows = XLSX.utils.sheet_to_json(firstSheet, {
+          header: 1,
+          defval: ""
+        });
         const rangeMap = new Map();
 
         rows.forEach((row, index) => {
           if (index === 0) return;
+
           const range = cleanCell(row[0]);
           const key = cleanCell(row[1]);
+
           if (key) rangeMap.set(key, range);
         });
 
@@ -1558,7 +1589,10 @@
         ]);
       });
 
-      const baseName = sheetName === "Langs" ? els.langsFileName.value : els.labelsFileName.value;
+      const baseName = sheetName === "Langs"
+        ? els.langsFileName.value
+        : els.labelsFileName.value;
+
       const fileName = ensureXlsxName(cleanCell(baseName) || `${sheetName}上传表`);
       downloadAoa(uploadRows, sheetName, fileName);
       setStatus(`${fileName} 已导出。`, "ok");
@@ -1566,7 +1600,9 @@
 
     function getActiveViewRows(data) {
       const rows = data[state.activeView];
+
       if (state.activeView !== "zhChanges" || state.zhDiffFilter === "all") return rows;
+
       return rows.filter(row => row.diffType === state.zhDiffFilter);
     }
 
@@ -1660,7 +1696,10 @@
         tool.classList.toggle("active", tool.id === selectedTool);
       });
 
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
     }
 
     document.querySelectorAll(".nav-main").forEach(btn => {
@@ -1683,15 +1722,18 @@
 
     function applyNavCollapsed(collapsed) {
       if (!sideNav || !navCollapseBtn || !workspaceEl) return;
+
       sideNav.classList.toggle("collapsed", collapsed);
       workspaceEl.classList.toggle("nav-collapsed", collapsed);
       navCollapseBtn.textContent = collapsed ? "》" : "《";
       navCollapseBtn.title = collapsed ? "展开左侧导航" : "隐藏左侧导航";
+
       localStorage.setItem("l10n_nav_collapsed", collapsed ? "1" : "0");
     }
 
     if (navCollapseBtn) {
       applyNavCollapsed(localStorage.getItem("l10n_nav_collapsed") === "1");
+
       navCollapseBtn.addEventListener("click", () => {
         applyNavCollapsed(!sideNav.classList.contains("collapsed"));
       });
@@ -1700,7 +1742,10 @@
     document.querySelectorAll("[data-goose-term-tab]").forEach(btn => {
       btn.addEventListener("click", () => {
         const targetId = btn.dataset.gooseTermTab;
-        document.querySelectorAll("[data-goose-term-tab]").forEach(tab => tab.classList.toggle("active", tab === btn));
+
+        document.querySelectorAll("[data-goose-term-tab]").forEach(tab => {
+          tab.classList.toggle("active", tab === btn);
+        });
 
         ["gooseTermChanged", "gooseTermNew", "gooseTermDeleted"].forEach(id => {
           const el = document.getElementById(id);
@@ -1712,7 +1757,11 @@
     document.querySelectorAll("[data-pc-result-tab]").forEach(btn => {
       btn.addEventListener("click", () => {
         const targetId = btn.dataset.pcResultTab;
-        document.querySelectorAll("[data-pc-result-tab]").forEach(tab => tab.classList.toggle("active", tab === btn));
+
+        document.querySelectorAll("[data-pc-result-tab]").forEach(tab => {
+          tab.classList.toggle("active", tab === btn);
+        });
+
         document.querySelectorAll("#paramCheckTool .pc-result-view").forEach(view => {
           view.classList.toggle("active", view.id === targetId);
         });
@@ -1749,13 +1798,16 @@
     function pcGetNormalizedBatchName() {
       const input = cleanCell(pcEls.uploadBatch.value);
       const today = pcGetTodayMMdd();
+
       if (!input) return today + "参数检查上传";
       if (/^\d{4}/.test(input)) return input.replace(/^\d{4}/, today);
+
       return today + input;
     }
 
     function pcNormalizeErrorLevel(value) {
       const text = cleanCell(value);
+
       if (!text) return "";
       if (text.includes("阻断")) return "阻断";
       if (text.includes("致命")) return "致命";
@@ -1767,6 +1819,7 @@
       if (lower.includes("fatal")) return "致命";
       if (lower.includes("notice")) return "提醒";
       if (lower.includes("warn")) return "警告";
+
       return text;
     }
 
@@ -1809,10 +1862,12 @@
 
     function pcRenderErrorLevelTag(errorLevel) {
       const type = pcNormalizeErrorLevel(errorLevel);
+
       if (type === "阻断") return '<span class="pc-level-tag block">阻断</span>';
       if (type === "致命") return '<span class="pc-level-tag fatal">致命</span>';
       if (type === "提醒") return '<span class="pc-level-tag notice">提醒</span>';
       if (type === "警告") return '<span class="pc-level-tag warn">警告</span>';
+
       return '<span class="pc-level-tag empty">空</span>';
     }
 
@@ -1825,11 +1880,17 @@
 
       rows.forEach(row => {
         const key = `${row.key}||${row.zh}||${row.errorType}||${row.errorLevel}`;
+
         if (!map.has(key)) {
-          map.set(key, { ...row, idList: [], langList: [] });
+          map.set(key, {
+            ...row,
+            idList: [],
+            langList: []
+          });
         }
 
         const target = map.get(key);
+
         if (row.id && !target.idList.includes(row.id)) target.idList.push(row.id);
         if (row.lang && !target.langList.includes(row.lang)) target.langList.push(row.lang);
       });
@@ -1857,6 +1918,7 @@
       pcState.uidCounter = 1;
 
       const filterMap = new Map();
+
       pcState.filterData.forEach(row => {
         if (!filterMap.has(row.key)) filterMap.set(row.key, []);
         filterMap.get(row.key).push(row);
@@ -1916,6 +1978,7 @@
 
       pcRenderAlertTable();
       pcRenderFinalTable();
+
       alert("参数检查完成。");
     }
 
@@ -1980,7 +2043,7 @@
         <table>
           <thead>
             <tr>
-                            <th>进入上传表</th>
+              <th>进入上传表</th>
               <th>状态</th>
               <th>错误级别</th>
               <th>错误类型</th>
@@ -1999,6 +2062,7 @@
       pcState.finalData.forEach(row => {
         const jpEl = document.getElementById("pc_jp_" + row.uid);
         const incEl = document.getElementById("pc_inc_" + row.uid);
+
         if (jpEl) row.editJp = jpEl.value;
         if (incEl) row.includeUpload = incEl.checked;
       });
@@ -2094,8 +2158,8 @@
 
         const dedupeKey = `${row.key}||${row.zh}`;
         if (seen.has(dedupeKey)) return;
-        seen.add(dedupeKey);
 
+        seen.add(dedupeKey);
         rows.push([batchName, row.key, row.zh, row.editJp]);
       });
 
@@ -2114,6 +2178,7 @@
       pcState.filterData.forEach(row => {
         const dedupeKey = `${row.key}||${row.zh}`;
         if (seen.has(dedupeKey)) return;
+
         seen.add(dedupeKey);
         rows.push([row.key, row.zh, row.trans || ""]);
       });
@@ -2121,6 +2186,7 @@
       pcState.alertData.forEach(row => {
         const dedupeKey = `${row.key}||${row.zh}`;
         if (seen.has(dedupeKey)) return;
+
         seen.add(dedupeKey);
         rows.push([row.key, row.zh, row.editJp || row.wrongTrans || ""]);
       });
@@ -2182,6 +2248,7 @@
     document.getElementById("pcTemplateBtn").addEventListener("click", () => {
       downloadAoa([["key", "中文", "译文"]], "筛选表", "filter_template.xlsx");
     });
+
     document.getElementById("pcRunBtn").addEventListener("click", pcRunCheck);
     document.getElementById("pcExportResultBtn").addEventListener("click", pcExportResults);
     document.getElementById("pcExportUploadBtn").addEventListener("click", pcExportUploadExcel);
@@ -2235,7 +2302,10 @@
     };
 
     function gcNormHeader(value) {
-      return cleanCell(value).replace(/\s+/g, "").replace(/　/g, "").toLowerCase();
+      return cleanCell(value)
+        .replace(/\s+/g, "")
+        .replace(/　/g, "")
+        .toLowerCase();
     }
 
     function gcFindCol(headerRow, names, fallback) {
@@ -2279,80 +2349,174 @@
       return "";
     }
 
-function gcParseXbench(rows) {
-    const metadata = metadataIdx >= 0 ? cleanCell(row[metadataIdx]) : "";
+    function gcParseXbench(rows) {
+      let headerIndex = -1;
+      let sourceIdx = -1;
+      let targetIdx = -1;
+      let commentsIdx = -1;
+      let metadataIdx = -1;
 
-    const leftCells = row.slice(0, sourceIdx).map(cleanCell).filter(Boolean);
-    const leftInfo = leftCells.join(" ");
-    const firstNonEmpty = row.map(cleanCell).find(Boolean) || "";
+      function normXbenchHeader(value) {
+        return cleanCell(value)
+          .replace(/\uFEFF/g, "")
+          .replace(/\s+/g, "")
+          .replace(/　/g, "")
+          .replace(/[:：]/g, "")
+          .toLowerCase();
+      }
 
-    // Xbench 小标题行，例如：
-    // Inconsistency in Target
-    // Key Term Mismatch
-    // Numeric Mismatch
-    // Tag Mismatch
-    const isCaseHeader =
-      firstNonEmpty &&
-      !source &&
-      !target &&
-      leftCells.length <= 1 &&
-      !/\.xlsx/i.test(firstNonEmpty) &&
-      !/%$/.test(firstNonEmpty) &&
-      !/^https?:\/\//i.test(firstNonEmpty) &&
-      !/^generatedby$/i.test(normXbenchHeader(firstNonEmpty));
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i] || [];
 
-    if (isCaseHeader) {
+        let sIdx = -1;
+        let tIdx = -1;
+        let cIdx = -1;
+        let mIdx = -1;
+
+        for (let j = 0; j < row.length; j++) {
+          const h = normXbenchHeader(row[j]);
+
+          if (h === "source") sIdx = j;
+          if (h === "target") tIdx = j;
+          if (h === "comments" || h === "comment") cIdx = j;
+          if (h === "metadata" || h === "meta") mIdx = j;
+        }
+
+        if (sIdx >= 0 && tIdx >= 0) {
+          headerIndex = i;
+          sourceIdx = sIdx;
+          targetIdx = tIdx;
+          commentsIdx = cIdx;
+          metadataIdx = mIdx;
+          break;
+        }
+      }
+
+      if (headerIndex < 0 && rows[10]) {
+        const c11 = normXbenchHeader(rows[10][2]);
+        const d11 = normXbenchHeader(rows[10][3]);
+
+        if (c11 === "source" && d11 === "target") {
+          headerIndex = 10;
+          sourceIdx = 2;
+          targetIdx = 3;
+          commentsIdx = 4;
+          metadataIdx = 5;
+        }
+      }
+
+      if (headerIndex < 0) {
+        for (let i = 0; i < Math.min(rows.length, 120); i++) {
+          const row = rows[i] || [];
+          const c = normXbenchHeader(row[2]);
+          const d = normXbenchHeader(row[3]);
+
+          if (c === "source" && d === "target") {
+            headerIndex = i;
+            sourceIdx = 2;
+            targetIdx = 3;
+            commentsIdx = 4;
+            metadataIdx = 5;
+            break;
+          }
+        }
+      }
+
+      if (headerIndex < 0) {
+        const preview = rows.slice(0, 20).map((row, i) => {
+          return `${i + 1}: ${JSON.stringify((row || []).slice(0, 8))}`;
+        }).join("\n");
+
+        throw new Error(
+          "未识别到 Xbench 表头 Source / Target。已尝试全表扫描和 C/D 列兜底。\n\n前20行预览：\n" + preview
+        );
+      }
+
+      const groups = [];
+      let currentGroup = null;
+      let currentIssueType = "";
+
+      function pushCurrentGroup() {
+        if (currentGroup && currentGroup.rows.length) {
+          groups.push(currentGroup);
+        }
+        currentGroup = null;
+      }
+
+      for (let i = headerIndex + 1; i < rows.length; i++) {
+        const row = rows[i] || [];
+
+        const source = cleanCell(row[sourceIdx]);
+        const target = cleanCell(row[targetIdx]);
+        const comments = commentsIdx >= 0 ? cleanCell(row[commentsIdx]) : "";
+        const metadata = metadataIdx >= 0 ? cleanCell(row[metadataIdx]) : "";
+
+        const leftCells = row.slice(0, sourceIdx).map(cleanCell).filter(Boolean);
+        const leftInfo = leftCells.join(" ");
+        const firstNonEmpty = row.map(cleanCell).find(Boolean) || "";
+
+        const isCaseHeader =
+          firstNonEmpty &&
+          !source &&
+          !target &&
+          leftCells.length <= 1 &&
+          !/\.xlsx/i.test(firstNonEmpty) &&
+          !/%$/.test(firstNonEmpty) &&
+          !/^https?:\/\//i.test(firstNonEmpty) &&
+          !/^generatedby$/i.test(normXbenchHeader(firstNonEmpty));
+
+        if (isCaseHeader) {
+          pushCurrentGroup();
+
+          currentIssueType = firstNonEmpty;
+          currentGroup = {
+            groupId: "",
+            source: "",
+            issueType: currentIssueType,
+            rows: []
+          };
+
+          continue;
+        }
+
+        if (!source || !target) continue;
+
+        if (!currentGroup) {
+          currentGroup = {
+            groupId: "",
+            source,
+            issueType: currentIssueType || "未分类问题",
+            rows: []
+          };
+        }
+
+        if (!currentGroup.source) currentGroup.source = source;
+
+        currentGroup.rows.push({
+          source,
+          target,
+          comments,
+          metadata,
+          leftInfo,
+          sheetName: gcInferSheetFromText(`${leftInfo} ${metadata}`),
+          xbenchRow: i + 1
+        });
+      }
+
       pushCurrentGroup();
 
-      currentIssueType = firstNonEmpty;
-      currentGroup = {
-        groupId: "",
-        source: "",
-        issueType: currentIssueType,
-        rows: []
-      };
+      groups.forEach((group, index) => {
+        group.groupId = "G" + String(index + 1).padStart(4, "0");
+        if (!group.source && group.rows[0]) {
+          group.source = group.rows[0].source;
+        }
+      });
 
-      continue;
-    }
-
-    if (!source || !target) continue;
-
-    if (!currentGroup) {
-      currentGroup = {
-        groupId: "",
-        source,
-        issueType: currentIssueType || "未分类问题",
-        rows: []
+      return {
+        groups,
+        rows: groups.flatMap(group => group.rows)
       };
     }
-
-    if (!currentGroup.source) currentGroup.source = source;
-
-    currentGroup.rows.push({
-      source,
-      target,
-      comments,
-      metadata,
-      leftInfo,
-      sheetName: gcInferSheetFromText(`${leftInfo} ${metadata}`),
-      xbenchRow: i + 1
-    });
-  }
-
-  pushCurrentGroup();
-
-  groups.forEach((group, index) => {
-    group.groupId = "G" + String(index + 1).padStart(4, "0");
-    if (!group.source && group.rows[0]) {
-      group.source = group.rows[0].source;
-    }
-  });
-
-  return {
-    groups,
-    rows: groups.flatMap(group => group.rows)
-  };
-}
 
     function gcNormalizeFullSheetRows(rows, sheetName) {
       let headerIndex = -1;
@@ -3002,65 +3166,65 @@ function gcParseXbench(rows) {
       gcEls.reminderPreview.innerHTML = '<div class="empty">暂无提醒。</div>';
     }
 
-gcEls.xbenchFile.addEventListener("change", async event => {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  try {
-    const workbook = await readWorkbook(file);
-
-    let parsed = null;
-    let usedSheetName = "";
-
-    for (const sheetName of workbook.SheetNames) {
-      const sheet = workbook.Sheets[sheetName];
-
-      const rows = XLSX.utils.sheet_to_json(sheet, {
-        header: 1,
-        defval: "",
-        blankrows: false
-      });
+    gcEls.xbenchFile.addEventListener("change", async event => {
+      const file = event.target.files[0];
+      if (!file) return;
 
       try {
-        const result = gcParseXbench(rows);
+        const workbook = await readWorkbook(file);
 
-        if (result.rows.length) {
-          parsed = result;
-          usedSheetName = sheetName;
-          break;
+        let parsed = null;
+        let usedSheetName = "";
+
+        for (const sheetName of workbook.SheetNames) {
+          const sheet = workbook.Sheets[sheetName];
+
+          const rows = XLSX.utils.sheet_to_json(sheet, {
+            header: 1,
+            defval: "",
+            blankrows: false
+          });
+
+          try {
+            const result = gcParseXbench(rows);
+
+            if (result.rows.length) {
+              parsed = result;
+              usedSheetName = sheetName;
+              break;
+            }
+          } catch (innerError) {
+            // 当前 Sheet 不符合 Xbench 表结构，继续尝试下一个 Sheet
+          }
         }
-      } catch (innerError) {
-        // 当前 Sheet 不符合 Xbench 表结构，继续尝试下一个 Sheet
+
+        if (!parsed) {
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const firstRows = XLSX.utils.sheet_to_json(firstSheet, {
+            header: 1,
+            defval: "",
+            blankrows: false
+          });
+
+          parsed = gcParseXbench(firstRows);
+          usedSheetName = workbook.SheetNames[0];
+        }
+
+        gcState.xbenchGroups = parsed.groups;
+        gcState.xbenchRows = parsed.rows;
+
+        gcEls.groupCount.textContent = parsed.groups.length;
+        gcEls.xbenchRowCount.textContent = parsed.rows.length;
+
+        setStatusByEl(
+          gcEls.xbenchStatus,
+          `已导入：${file.name}（Sheet：${usedSheetName}，问题组 ${parsed.groups.length}，明细行 ${parsed.rows.length}）`,
+          "ok"
+        );
+      } catch (error) {
+        setStatusByEl(gcEls.xbenchStatus, `读取失败：${error.message}`, "err");
       }
-    }
-
-    if (!parsed) {
-      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      const firstRows = XLSX.utils.sheet_to_json(firstSheet, {
-        header: 1,
-        defval: "",
-        blankrows: false
-      });
-
-      parsed = gcParseXbench(firstRows);
-      usedSheetName = workbook.SheetNames[0];
-    }
-
-    gcState.xbenchGroups = parsed.groups;
-    gcState.xbenchRows = parsed.rows;
-
-    gcEls.groupCount.textContent = parsed.groups.length;
-    gcEls.xbenchRowCount.textContent = parsed.rows.length;
-
-    setStatusByEl(
-      gcEls.xbenchStatus,
-      `已导入：${file.name}（Sheet：${usedSheetName}，问题组 ${parsed.groups.length}，明细行 ${parsed.rows.length}）`,
-      "ok"
-    );
-  } catch (error) {
-    setStatusByEl(gcEls.xbenchStatus, `读取失败：${error.message}`, "err");
-  }
-});
+    });
 
     gcEls.langsFile.addEventListener("change", event => {
       gcImportFullFile(event.target.files[0], "Langs", gcEls.langsStatus);
@@ -3078,7 +3242,11 @@ gcEls.xbenchFile.addEventListener("change", async event => {
         const rows = await readFirstSheetAoa(file);
         gcState.editedRows = gcParseEditedRows(rows);
 
-        setStatusByEl(gcEls.editedStatus, `已导入：${file.name}（${gcState.editedRows.length} 行），可点击下方按钮导出上传表。`, "ok");
+        setStatusByEl(
+          gcEls.editedStatus,
+          `已导入：${file.name}（${gcState.editedRows.length} 行），可点击下方按钮导出上传表。`,
+          "ok"
+        );
       } catch (error) {
         setStatusByEl(gcEls.editedStatus, `读取失败：${error.message}`, "err");
       }
